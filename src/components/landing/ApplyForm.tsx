@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Applicant, NewApplicantData } from '../../types'
 import { submitToFormspree } from '../../services/formspree'
+import { avatarColor, initials } from '../../utils/ui'
 import { LogoMark } from '../Logo'
 
 type FormState = {
@@ -55,14 +56,95 @@ const perks = [
   'Sin costo de inscripción, sin matrícula y sin permanencia mínima',
 ]
 
+const requirements = [
+  '1.000 seguidores o 100 viewers promedio',
+  '5 horas o más en vivo por semana',
+  'TikTok LIVE habilitado en tu país',
+  '18 años o consentimiento de tutor',
+]
+
 const nextSteps = [
   'Envías tu perfil de TikTok en 2 minutos',
   'En menos de 48 h (máx. 3 días) te contacta un pilar de la agencia',
   'Entras a las clases gratuitas y arrancas tu plan de crecimiento',
 ]
 
+const proofAvatars = ['Luna Vargas', 'Mateo Cruz', 'Sofía Rivas', 'Kevin Ortiz']
+
+type QuickOption = { label: string; value: string }
+
+const quickPicks: Partial<Record<keyof FormState, QuickOption[]>> = {
+  followers: [
+    { label: '< 1k', value: '900' },
+    { label: '1k – 10k', value: '5000' },
+    { label: '10k – 100k', value: '50000' },
+    { label: '100k +', value: '250000' },
+  ],
+  avgViewers: [
+    { label: '< 100', value: '80' },
+    { label: '100 – 500', value: '300' },
+    { label: '500 – 2k', value: '1200' },
+    { label: '2k +', value: '4000' },
+  ],
+  hoursPerWeek: [
+    { label: '5 h', value: '5' },
+    { label: '10 h', value: '10' },
+    { label: '20 h', value: '20' },
+    { label: '40 h', value: '40' },
+  ],
+}
+
+const stepFields: Record<Step, (keyof FormState)[]> = {
+  1: ['handle', 'category', 'followers', 'avgViewers', 'hoursPerWeek'],
+  2: ['name', 'email'],
+}
+
 const normalizeHandle = (value: string): string =>
   value.trim().replace(/^@+/, '').toLowerCase()
+
+const clearOrSet = (
+  errors: FormErrors,
+  field: keyof FormState,
+  message: string | undefined,
+): FormErrors => {
+  const next = { ...errors }
+  if (message) next[field] = message
+  else delete next[field]
+  return next
+}
+
+interface QuickPicksProps {
+  field: keyof FormState
+  value: string
+  onPick: (value: string) => void
+}
+
+function QuickPicks({ field, value, onPick }: QuickPicksProps) {
+  const options = quickPicks[field]
+  if (!options) return null
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {options.map((option) => {
+        const active = value === option.value
+        return (
+          <button
+            key={option.label}
+            type="button"
+            onClick={() => onPick(option.value)}
+            className={`rounded-lg border px-2.5 py-1 font-display text-[11px] font-medium transition ${
+              active
+                ? 'border-brand-400 bg-brand-500/25 text-white shadow-glow-sm'
+                : 'border-white/10 bg-white/5 text-white/55 hover:border-brand-400/50 hover:text-white'
+            }`}
+          >
+            {option.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 interface ApplyFormProps {
   onSubmit: (data: NewApplicantData) => Applicant
@@ -76,6 +158,8 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
   const [submitted, setSubmitted] = useState<Applicant | null>(null)
   const [status, setStatus] = useState<SendStatus>('idle')
   const [sendError, setSendError] = useState<string | null>(null)
+  const [attempted, setAttempted] = useState(false)
+  const [showOptional, setShowOptional] = useState(false)
   const stepHeadingRef = useRef<HTMLHeadingElement>(null)
   const isFirstRender = useRef(true)
 
@@ -87,37 +171,70 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
     stepHeadingRef.current?.focus()
   }, [step])
 
+  const takenSet = takenHandles.map(normalizeHandle)
+
+  const validateField = (
+    field: keyof FormState,
+    state: FormState = form,
+  ): string | undefined => {
+    switch (field) {
+      case 'handle':
+        if (!/^@?[a-zA-Z0-9._]{2,}$/.test(state.handle.trim())) return 'Ejemplo: @tucuenta'
+        if (takenSet.includes(normalizeHandle(state.handle))) return 'Ese @ ya está en revisión'
+        return undefined
+      case 'followers':
+        if (!state.followers || Number(state.followers) < 0) return 'Indica tus seguidores'
+        return undefined
+      case 'avgViewers':
+        if (!state.avgViewers || Number(state.avgViewers) < 0) return 'Indica viewers promedio'
+        return undefined
+      case 'hoursPerWeek':
+        if (state.hoursPerWeek && Number(state.hoursPerWeek) < 0) return 'Indica horas válidas'
+        return undefined
+      case 'category':
+        if (!state.category) return 'Selecciona una categoría'
+        return undefined
+      case 'name':
+        if (state.name.trim().length < 3) return 'Ingresa tu nombre completo'
+        return undefined
+      case 'email':
+        if (!state.email.includes('@')) return 'Email inválido'
+        return undefined
+      default:
+        return undefined
+    }
+  }
+
+  const validateStep = (target: Step): FormErrors => {
+    const next: FormErrors = {}
+    for (const field of stepFields[target]) {
+      const message = validateField(field)
+      if (message) next[field] = message
+    }
+    return next
+  }
+
   const update =
     (field: keyof FormState) =>
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
       const { value } = event.target
-      setForm((prev) => ({ ...prev, [field]: value }))
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
+      const next = { ...form, [field]: value }
+      setForm(next)
+      setErrors((prev) => clearOrSet(prev, field, validateField(field, next)))
     }
 
-  const takenSet = takenHandles.map(normalizeHandle)
+  const pick = (field: keyof FormState) => (value: string): void => {
+    const next = { ...form, [field]: value }
+    setForm(next)
+    setErrors((prev) => clearOrSet(prev, field, validateField(field, next)))
+  }
 
-  const validateStep = (target: Step): FormErrors => {
-    const next: FormErrors = {}
-
-    if (target === 1) {
-      if (!/^@?[a-zA-Z0-9._]{2,}$/.test(form.handle.trim())) next.handle = 'Ejemplo: @tucuenta'
-      else if (takenSet.includes(normalizeHandle(form.handle)))
-        next.handle = 'Ese @ ya está en revisión'
-      if (!form.followers || Number(form.followers) < 0) next.followers = 'Indica tus seguidores'
-      if (!form.avgViewers || Number(form.avgViewers) < 0) next.avgViewers = 'Indica viewers promedio'
-      if (form.hoursPerWeek && Number(form.hoursPerWeek) < 0)
-        next.hoursPerWeek = 'Indica horas válidas'
-      if (!form.category) next.category = 'Selecciona una categoría'
-    } else {
-      if (form.name.trim().length < 3) next.name = 'Ingresa tu nombre completo'
-      if (!form.email.includes('@')) next.email = 'Email inválido'
-    }
-
-    return next
+  const touch = (field: keyof FormState) => (): void => {
+    setErrors((prev) => clearOrSet(prev, field, validateField(field)))
   }
 
   const goToStep2 = (): void => {
+    setAttempted(true)
     const nextErrors = validateStep(1)
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
@@ -129,6 +246,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
 
   const goToStep1 = (): void => {
     setErrors({})
+    setAttempted(false)
     setStep(1)
   }
 
@@ -152,6 +270,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
+    setAttempted(true)
 
     if (step === 1) {
       goToStep2()
@@ -201,6 +320,8 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
       setStep(1)
       setStatus('idle')
       setSendError(null)
+      setAttempted(false)
+      setShowOptional(false)
     })()
   }
 
@@ -211,15 +332,22 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
 
   const errorFor = (field: keyof FormErrors): ReactNode =>
     errors[field] ? (
-      <p id={`${field}-error`} role="alert" className="mt-1.5 text-xs text-rose-300">
+      <p id={`${field}-error`} role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-300">
+        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 flex-none" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
+        </svg>
         {errors[field]}
       </p>
     ) : null
 
+  const errorCount = Object.values(errors).filter(Boolean).length
+  const showSummary = attempted && errorCount > 0
+
   if (submitted) {
     return (
       <section id="postular" className="relative scroll-mt-24 py-24">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/20 blur-[130px]" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/30 blur-[150px]" />
         <div className="container-page relative">
           <div className="card mx-auto max-w-2xl animate-fade-up p-8 text-center sm:p-12" role="status" aria-live="polite">
             <div className="relative mx-auto h-16 w-16">
@@ -258,8 +386,8 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
             </ol>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href="#referentes" className="btn-primary">
-                Ver los top de Colombia
+              <a href="#como-funciona" className="btn-primary">
+                Ver el plan de reclutamiento
               </a>
               <button onClick={() => setSubmitted(null)} className="btn-ghost">
                 Inscribir otro perfil
@@ -273,11 +401,12 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
 
   return (
     <section id="postular" className="relative scroll-mt-24 py-24">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/20 blur-[130px]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/30 blur-[150px]" />
+      <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-glow/15 blur-[120px]" />
 
       <div className="container-page relative">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
-          <div>
+          <div className="order-2 lg:order-1">
             <span className="eyebrow animate-fade-up">
               <LogoMark tone="dark" className="h-4 w-4" alt="" />
               Inscripción 100% gratuita
@@ -309,7 +438,25 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
               ))}
             </ul>
 
-            <div className="mt-9 rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5">
+            <div className="mt-8 rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5">
+              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200">
+                Requisitos mínimos
+              </p>
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                {requirements.map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-white/70">
+                    <span className="mt-0.5 grid h-4 w-4 flex-none place-items-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/40">
+                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3.5">
+                        <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5">
               <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200">
                 Qué pasa después de enviar tu inscripción
               </p>
@@ -323,6 +470,29 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                   </li>
                 ))}
               </ol>
+            </div>
+
+            <div className="mt-6 flex items-center gap-4 rounded-2xl border border-white/10 bg-ink-800/60 p-5 backdrop-blur-xl">
+              <div className="flex flex-none -space-x-3" aria-hidden="true">
+                {proofAvatars.map((name) => (
+                  <span
+                    key={name}
+                    className={`grid h-9 w-9 place-items-center rounded-full border-2 border-ink-800 bg-gradient-to-br ${avatarColor(
+                      name,
+                    )} font-display text-[10px] font-bold text-white`}
+                  >
+                    {initials(name)}
+                  </span>
+                ))}
+              </div>
+              <div>
+                <p className="font-display text-sm font-semibold text-white">
+                  +320 creadores ya confían en Live Brand
+                </p>
+                <p className="mt-0.5 text-xs text-white/60">
+                  Respuesta en menos de 48 h (máximo 3 días) · +3.400 h de live gestionadas al mes
+                </p>
+              </div>
             </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-ink-800/60 p-5">
@@ -339,216 +509,445 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                 </p>
               </div>
             </div>
-
-            <p className="mt-4 text-xs text-white/60">
-              Antes de postular, revisa los{' '}
-              <a href="#requisitos" className="font-semibold text-brand-200 underline underline-offset-4">
-                requisitos mínimos
-              </a>{' '}
-              de la convocatoria.
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="card animate-fade-up p-7 sm:p-9" noValidate>
-            <div className="mb-7">
-              <div className="flex items-center justify-between gap-4 font-display text-[11px] font-semibold uppercase tracking-[0.18em]">
-                <span className={step === 1 ? 'text-brand-200' : 'text-white/60'}>
-                  1 · Tu perfil
-                </span>
-                <span className={step === 2 ? 'text-brand-200' : 'text-white/60'}>
-                  2 · Contacto
-                </span>
-              </div>
-              <div
-                className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
-                role="progressbar"
-                aria-label="Progreso de la postulación"
-                aria-valuemin={1}
-                aria-valuemax={2}
-                aria-valuenow={step}
-              >
+          <form
+            onSubmit={handleSubmit}
+            className="relative order-1 animate-fade-up rounded-3xl bg-gradient-to-br from-brand-400/70 via-white/10 to-glow/60 p-px shadow-card lg:order-2"
+            noValidate
+          >
+            <div className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-ink-900/85 p-7 backdrop-blur-xl sm:p-9">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.28),transparent_70%)]" />
+
+              <div className="relative mb-7">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`grid h-9 w-9 flex-none place-items-center rounded-full font-display text-sm font-bold transition ${
+                        step >= 1
+                          ? 'bg-gradient-to-br from-brand-500 to-glow text-white shadow-glow-sm'
+                          : 'border border-white/15 bg-white/5 text-white/50'
+                      }`}
+                    >
+                      1
+                    </span>
+                    <span
+                      className={`font-display text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                        step === 1 ? 'text-brand-200' : 'text-white/50'
+                      }`}
+                    >
+                      Tu perfil
+                    </span>
+                  </div>
+
+                  <span
+                    aria-hidden="true"
+                    className={`h-px flex-1 bg-gradient-to-r transition ${
+                      step === 2 ? 'from-glow to-brand-400' : 'from-white/15 to-white/5'
+                    }`}
+                  />
+
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`grid h-9 w-9 flex-none place-items-center rounded-full font-display text-sm font-bold transition ${
+                        step >= 2
+                          ? 'bg-gradient-to-br from-brand-500 to-glow text-white shadow-glow-sm'
+                          : 'border border-white/15 bg-white/5 text-white/50'
+                      }`}
+                    >
+                      2
+                    </span>
+                    <span
+                      className={`font-display text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                        step === 2 ? 'text-brand-200' : 'text-white/50'
+                      }`}
+                    >
+                      Contacto
+                    </span>
+                  </div>
+                </div>
+
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand-500 to-glow transition-[width] duration-500"
-                  style={{ width: step === 1 ? '50%' : '100%' }}
-                />
-              </div>
-              <h3
-                ref={stepHeadingRef}
-                tabIndex={-1}
-                className="mt-5 font-display text-lg font-semibold text-white"
-              >
-                {step === 1 ? 'Paso 1: Tu perfil' : 'Paso 2: Contacto'}
-              </h3>
-              <p className="mt-1 text-xs text-white/60">
-                {step === 1
-                  ? '2 minutos, sin CV y sin costo. Cuéntanos cómo está tu cuenta de TikTok hoy.'
-                  : '¿Cómo te contactamos para tu clase de diagnóstico gratuita?'}
-              </p>
-            </div>
-
-            <input
-              type="text"
-              name="_gotcha"
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-              className="hidden"
-              value=""
-              onChange={() => undefined}
-            />
-
-            {step === 1 ? (
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="label" htmlFor="handle">@ de TikTok</label>
-                  <input id="handle" {...fieldAria('handle')} className="input" placeholder="@tucuenta" value={form.handle} onChange={update('handle')} />
-                  {errorFor('handle')}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="category">Categoría principal</label>
-                  <select id="category" {...fieldAria('category')} className="input" value={form.category} onChange={update('category')}>
-                    <option value="">Selecciona una</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  {errorFor('category')}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="followers">Seguidores</label>
-                  <input id="followers" {...fieldAria('followers')} type="number" min="0" className="input" placeholder="Ej: 45000" value={form.followers} onChange={update('followers')} />
-                  {errorFor('followers')}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="avgViewers">Viewers promedio en live</label>
-                  <input id="avgViewers" {...fieldAria('avgViewers')} type="number" min="0" className="input" placeholder="Ej: 850" value={form.avgViewers} onChange={update('avgViewers')} />
-                  {errorFor('avgViewers')}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="hoursPerWeek">Horas en vivo por semana</label>
-                  <input id="hoursPerWeek" {...fieldAria('hoursPerWeek')} type="number" min="0" className="input" placeholder="Ej: 15" value={form.hoursPerWeek} onChange={update('hoursPerWeek')} />
-                  {errorFor('hoursPerWeek')}
-                </div>
-
-                <p className="text-xs text-white/60 sm:col-span-2">
-                  Mínimo 1.000 seguidores o 100 viewers promedio, y 5 horas semanales en vivo.
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="label" htmlFor="name">Nombre completo</label>
-                  <input id="name" autoComplete="name" {...fieldAria('name')} className="input" placeholder="Tu nombre y apellido" value={form.name} onChange={update('name')} />
-                  {errorFor('name')}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="email">Email de contacto</label>
-                  <input id="email" type="email" autoComplete="email" {...fieldAria('email')} className="input" placeholder="tu@email.com" value={form.email} onChange={update('email')} />
-                  {errorFor('email')}
-                </div>
-
-                <div>
-                  <label className="label" htmlFor="phone">Teléfono / WhatsApp</label>
-                  <input id="phone" type="tel" autoComplete="tel" {...fieldAria('phone')} className="input" placeholder="+56 9 0000 0000" value={form.phone} onChange={update('phone')} />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="label" htmlFor="availability">Horarios disponibles</label>
-                  <input id="availability" {...fieldAria('availability')} className="input" placeholder="Ej: Lunes a viernes, 18:00 – 23:00" value={form.availability} onChange={update('availability')} />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="label" htmlFor="source">¿Cómo te enteraste de Live Brand?</label>
-                  <select id="source" className="input" value={form.source} onChange={update('source')}>
-                    <option value="">Selecciona una opción</option>
-                    {sources.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="label" htmlFor="note">Cuéntanos de tu proyecto</label>
-                  <textarea
-                    id="note"
-                    rows={4}
-                    className="input resize-none"
-                    placeholder="¿Qué lograste en tus últimas transmisiones? ¿Qué buscas en una agencia?"
-                    value={form.note}
-                    onChange={update('note')}
+                  className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
+                  role="progressbar"
+                  aria-label="Progreso de la postulación"
+                  aria-valuemin={1}
+                  aria-valuemax={2}
+                  aria-valuenow={step}
+                >
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-glow transition-[width] duration-500"
+                    style={{ width: step === 1 ? '50%' : '100%' }}
                   />
                 </div>
-              </div>
-            )}
 
-            <p className="mt-6 text-xs font-medium text-brand-200">
-              Inscripción gratuita y sin compromiso · Cupos limitados por categoría · Te contactamos
-              en menos de 48 h (máximo 3 días).
-            </p>
-
-            {sendError && (
-              <div
-                role="alert"
-                className="mt-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-4 text-sm text-rose-200"
-              >
-                <span className="font-semibold">No pudimos enviar tu inscripción.</span>{' '}
-                {sendError} Tus datos siguen aquí: vuelve a intentarlo en un momento.
-              </div>
-            )}
-
-            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1 text-xs text-white/60">
-                <p>Solo usamos tus datos para contactarte sobre la convocatoria.</p>
-                <p>Los enviamos a nuestro equipo de admisión y se guardan en este dispositivo.</p>
+                <h3
+                  ref={stepHeadingRef}
+                  tabIndex={-1}
+                  className="mt-5 font-display text-lg font-semibold text-white focus:outline-none"
+                >
+                  {step === 1 ? 'Paso 1: Tu perfil' : 'Paso 2: Contacto'}
+                </h3>
+                <p className="mt-1 text-xs text-white/60">
+                  {step === 1
+                    ? '2 minutos, sin CV y sin costo. Cuéntanos cómo está tu cuenta de TikTok hoy.'
+                    : '¿Cómo te contactamos para tu clase de diagnóstico gratuita?'}
+                </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                {step === 2 && (
-                  <button
-                    type="button"
-                    onClick={goToStep1}
-                    disabled={status === 'sending'}
-                    className="btn-ghost w-full sm:w-auto"
-                  >
-                    Atrás
-                  </button>
-                )}
-                {step === 1 ? (
-                  <button type="button" onClick={goToStep2} className="btn-primary w-full sm:w-auto">
-                    Continuar
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={status === 'sending'}
-                    aria-busy={status === 'sending'}
-                    className="btn-primary w-full sm:w-auto"
-                  >
-                    {status === 'sending' ? (
-                      <>
-                        <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                          <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
-                        </svg>
-                        Enviando…
-                      </>
-                    ) : (
-                      <>
-                        {status === 'failed' ? 'Reintentar inscripción' : 'Enviar mi inscripción gratis'}
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                          <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </>
+              <input
+                type="text"
+                name="_gotcha"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="hidden"
+                value=""
+                onChange={() => undefined}
+              />
+
+              {showSummary && (
+                <div
+                  role="alert"
+                  className="relative mb-5 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+                >
+                  <span className="font-semibold">
+                    Revisa {errorCount === 1 ? 'el campo marcado' : `los ${errorCount} campos marcados`}
+                  </span>{' '}
+                  para {step === 1 ? 'continuar al paso 2' : 'enviar tu inscripción'}.
+                </div>
+              )}
+
+              {step === 1 ? (
+                <div key={1} className="grid animate-fade-up gap-5 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="handle">
+                      @ de TikTok
+                    </label>
+                    <input
+                      id="handle"
+                      {...fieldAria('handle')}
+                      className="input"
+                      placeholder="@tucuenta"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={form.handle}
+                      onChange={update('handle')}
+                      onBlur={touch('handle')}
+                    />
+                    {errorFor('handle')}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <span id="category-label" className="label after:ml-0.5 after:text-glow after:content-['*']">
+                      Categoría principal
+                    </span>
+                    <div
+                      role="radiogroup"
+                      aria-labelledby="category-label"
+                      {...fieldAria('category')}
+                      className="mt-1 flex flex-wrap gap-2"
+                    >
+                      {categories.map((cat) => {
+                        const active = form.category === cat
+                        return (
+                          <label
+                            key={cat}
+                            className={`cursor-pointer rounded-full border px-3.5 py-2 font-display text-xs font-medium transition ${
+                              active
+                                ? 'border-brand-300 bg-brand-500/25 text-white shadow-glow-sm'
+                                : 'border-white/10 bg-white/5 text-white/60 hover:border-brand-400/50 hover:text-white'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="category"
+                              value={cat}
+                              checked={active}
+                              onChange={update('category')}
+                              className="sr-only"
+                            />
+                            {cat}
+                          </label>
+                        )
+                      })}
+                    </div>
+                    {errorFor('category')}
+                  </div>
+
+                  <div>
+                    <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="followers">
+                      Seguidores
+                    </label>
+                    <input
+                      id="followers"
+                      {...fieldAria('followers')}
+                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      className="input"
+                      placeholder="Ej: 45000"
+                      value={form.followers}
+                      onChange={update('followers')}
+                      onBlur={touch('followers')}
+                    />
+                    <QuickPicks field="followers" value={form.followers} onPick={pick('followers')} />
+                    {errorFor('followers')}
+                  </div>
+
+                  <div>
+                    <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="avgViewers">
+                      Viewers promedio en live
+                    </label>
+                    <input
+                      id="avgViewers"
+                      {...fieldAria('avgViewers')}
+                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      className="input"
+                      placeholder="Ej: 850"
+                      value={form.avgViewers}
+                      onChange={update('avgViewers')}
+                      onBlur={touch('avgViewers')}
+                    />
+                    <QuickPicks field="avgViewers" value={form.avgViewers} onPick={pick('avgViewers')} />
+                    {errorFor('avgViewers')}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="label" htmlFor="hoursPerWeek">
+                      Horas en vivo por semana
+                      <span className="ml-1.5 font-normal normal-case tracking-normal text-white/45">
+                        (opcional)
+                      </span>
+                    </label>
+                    <input
+                      id="hoursPerWeek"
+                      {...fieldAria('hoursPerWeek')}
+                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      className="input"
+                      placeholder="Ej: 15"
+                      value={form.hoursPerWeek}
+                      onChange={update('hoursPerWeek')}
+                      onBlur={touch('hoursPerWeek')}
+                    />
+                    <QuickPicks
+                      field="hoursPerWeek"
+                      value={form.hoursPerWeek}
+                      onPick={pick('hoursPerWeek')}
+                    />
+                    {errorFor('hoursPerWeek')}
+                  </div>
+
+                  <p className="text-xs text-white/60 sm:col-span-2">
+                    Mínimo 1.000 seguidores o 100 viewers promedio, y 5 horas semanales en vivo.
+                  </p>
+                </div>
+              ) : (
+                <div key={2} className="grid animate-fade-up gap-5 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="name">
+                      Nombre completo
+                    </label>
+                    <input
+                      id="name"
+                      autoComplete="name"
+                      {...fieldAria('name')}
+                      className="input"
+                      placeholder="Tu nombre y apellido"
+                      value={form.name}
+                      onChange={update('name')}
+                      onBlur={touch('name')}
+                    />
+                    {errorFor('name')}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="email">
+                      Email de contacto
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      {...fieldAria('email')}
+                      className="input"
+                      placeholder="tu@email.com"
+                      value={form.email}
+                      onChange={update('email')}
+                      onBlur={touch('email')}
+                    />
+                    {errorFor('email')}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowOptional((open) => !open)}
+                      aria-expanded={showOptional}
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-3 text-left font-display text-xs font-semibold uppercase tracking-[0.16em] text-white/60 transition hover:border-brand-400/50 hover:text-brand-200"
+                    >
+                      Opcional · mejora tu postulación
+                      <svg
+                        viewBox="0 0 24 24"
+                        className={`h-4 w-4 transition-transform duration-300 ${
+                          showOptional ? 'rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        aria-hidden="true"
+                      >
+                        <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+
+                    {showOptional && (
+                      <div className="mt-5 grid animate-fade-up gap-5 sm:grid-cols-2">
+                        <div>
+                          <label className="label" htmlFor="phone">
+                            Teléfono / WhatsApp
+                          </label>
+                          <input
+                            id="phone"
+                            type="tel"
+                            autoComplete="tel"
+                            className="input"
+                            placeholder="+56 9 0000 0000"
+                            value={form.phone}
+                            onChange={update('phone')}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="label" htmlFor="availability">
+                            Horarios disponibles
+                          </label>
+                          <input
+                            id="availability"
+                            className="input"
+                            placeholder="Ej: Lunes a viernes, 18:00 – 23:00"
+                            value={form.availability}
+                            onChange={update('availability')}
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="label" htmlFor="source">
+                            ¿Cómo te enteraste de Live Brand?
+                          </label>
+                          <select
+                            id="source"
+                            className="input"
+                            value={form.source}
+                            onChange={update('source')}
+                          >
+                            <option value="">Selecciona una opción</option>
+                            {sources.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="label" htmlFor="note">
+                            Cuéntanos de tu proyecto
+                          </label>
+                          <textarea
+                            id="note"
+                            rows={4}
+                            className="input resize-none"
+                            placeholder="¿Qué lograste en tus últimas transmisiones? ¿Qué buscas en una agencia?"
+                            value={form.note}
+                            onChange={update('note')}
+                          />
+                        </div>
+                      </div>
                     )}
-                  </button>
-                )}
+                  </div>
+                </div>
+              )}
+
+              <p className="mt-6 text-xs font-medium text-brand-200">
+                Inscripción gratuita y sin compromiso · Cupos limitados por categoría · Te contactamos
+                en menos de 48 h (máximo 3 días).
+              </p>
+
+              {sendError && (
+                <div
+                  role="alert"
+                  className="mt-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-4 text-sm text-rose-200"
+                >
+                  <span className="font-semibold">No pudimos enviar tu inscripción.</span>{' '}
+                  {sendError} Tus datos siguen aquí: vuelve a intentarlo en un momento.
+                </div>
+              )}
+
+              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1 text-xs text-white/60">
+                  <p>Solo usamos tus datos para contactarte sobre la convocatoria.</p>
+                  <p>Los enviamos a nuestro equipo de admisión y se guardan en este dispositivo.</p>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  {step === 2 && (
+                    <button
+                      type="button"
+                      onClick={goToStep1}
+                      disabled={status === 'sending'}
+                      className="btn-ghost w-full sm:w-auto"
+                    >
+                      Atrás
+                    </button>
+                  )}
+                  {step === 1 ? (
+                    <button
+                      type="button"
+                      onClick={goToStep2}
+                      className="btn-primary w-full sm:w-auto"
+                    >
+                      Continuar
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        aria-hidden="true"
+                      >
+                        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={status === 'sending'}
+                      aria-busy={status === 'sending'}
+                      className="btn-primary w-full sm:w-auto"
+                    >
+                      {status === 'sending' ? (
+                        <>
+                          <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
+                          </svg>
+                          Enviando…
+                        </>
+                      ) : (
+                        <>
+                          {status === 'failed' ? 'Reintentar inscripción' : 'Enviar mi inscripción gratis'}
+                          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                            <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </form>

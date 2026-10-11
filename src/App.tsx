@@ -2,13 +2,9 @@ import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import type { Applicant, PanelTab } from './types'
 import Navbar from './components/landing/Navbar'
 import Hero from './components/landing/Hero'
-import Benefits from './components/landing/Benefits'
 import HowItWorks from './components/landing/HowItWorks'
-import TopCreators from './components/landing/TopCreators'
-import ScarcityCta from './components/landing/ScarcityCta'
-import Requirements from './components/landing/Requirements'
-import Faq from './components/landing/Faq'
 import ApplyForm from './components/landing/ApplyForm'
+import MobileCta from './components/landing/MobileCta'
 import Footer from './components/landing/Footer'
 import NotFound from './components/NotFound'
 import { useApplicants } from './hooks/useApplicants'
@@ -121,15 +117,11 @@ export default function App() {
       <Navbar onOpenPanel={openPanel} />
       <main id="main-content" tabIndex={-1}>
         <Hero onApply={goToApply} />
-        <Benefits />
         <HowItWorks />
-        <TopCreators />
-        <Requirements />
-        <ScarcityCta />
-        <Faq />
         <ApplyForm onSubmit={addApplicant} takenHandles={applicants.map((a) => a.handle)} />
       </main>
       <Footer onOpenPanel={openPanel} />
+      <MobileCta onApply={goToApply} />
     </div>
   )
 }

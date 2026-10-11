@@ -39,31 +39,37 @@ describe('App', () => {
     expect(screen.queryByRole('heading', { level: 1, name: /lives en TikTok/ })).not.toBeInTheDocument()
   })
 
-  it('incluye plan, top de referentes, requisitos y FAQ en la landing', () => {
+  it('incluye el plan de reclutamiento y el formulario en la landing', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { level: 2, name: /cómo funciona/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: /requisitos mínimos/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: /preguntas frecuentes/i })).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { level: 2, name: /top de colombia/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { level: 2, name: /pocos cupos/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/no son clientes de la agencia/i),
-    ).toBeInTheDocument()
-
-    expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(4)
-    expect(screen.getByRole('button', { name: /qué categorías aceptan/i })).toBeInTheDocument()
-    expect(screen.getByText('92% de aprobación en postulaciones')).toBeInTheDocument()
     expect(screen.getByLabelText('@ de TikTok')).toBeInTheDocument()
     expect(
       screen.getAllByText(/te contactamos en menos de 48 h \(máximo 3 días\)/i).length,
     ).toBeGreaterThan(0)
-    expect(screen.getByText('Carlos Feria')).toBeInTheDocument()
-    expect(screen.getByText(/@carlosferiag/)).toBeInTheDocument()
+    expect(screen.getByText('92% de aprobación en postulaciones')).toBeInTheDocument()
+  })
+
+  it('no muestra las secciones retiradas del landing', () => {
+    render(<App />)
+
+    expect(
+      screen.queryByRole('heading', { level: 2, name: /requisitos mínimos/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { level: 2, name: /preguntas frecuentes/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { level: 2, name: /top de colombia/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 2, name: /pocos cupos/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /qué categorías aceptan/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /beneficios/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /requisitos/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('no muestra secciones con datos de ejemplo eliminadas', () => {

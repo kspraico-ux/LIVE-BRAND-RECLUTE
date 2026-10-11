@@ -24,17 +24,17 @@ npm test         # tests (npm run test:watch para watch mode)
 
 ## Estructura
 
-- `#/` — Landing pública: hero animado (canvas de partículas), beneficios, plan de reclutamiento con tiempos, top de referentes de Colombia, requisitos, bloque de cupos, FAQ y formulario de inscripción gratuita en 2 pasos.
+- `#/` — Landing pública: hero animado (canvas de partículas), plan de reclutamiento con tiempos y formulario de inscripción gratuita en 2 pasos.
 - `#/panel` — Panel interno (enlace "Panel interno" en el navbar o footer): KPIs, distribución de estados, listado de postulantes con búsqueda, filtros y orden persistidos, detalle con acciones masivas, deshacer, exportar CSV y backup/restore.
 - Cualquier hash desconocido muestra una 404 con enlace al inicio.
 
 ## Funciones
 
-- Formulario de inscripción gratuita: validación en 2 pasos, anti-duplicados por @, envío a Formspree con estado de carga/error reintentable y registro local.
+- Formulario de inscripción gratuita: validación en 2 pasos (con validación al salir del campo y resumen de errores), categorías como chips, atajos rápidos para métricas, campos opcionales colapsables, anti-duplicados por @, envío a Formspree con estado de carga/error reintentable y registro local.
 - Estados de postulante: pendiente → contactado → aprobado / rechazado, con historial y deshacer.
 - KPIs: total de postulantes, aprobados, conversión, pendientes, seguidores y horas de live acumuladas.
 - Exportar CSV, backup/restore en JSON y restaurar datos de demostración.
-- Seed de datos de ejemplo para el panel en `src/data/seedApplicants.ts` y catálogo de referentes en `src/data/topCreators.ts`.
+- Seed de datos de ejemplo para el panel en `src/data/seedApplicants.ts`.
 
 ## Despliegue
 

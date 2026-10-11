@@ -6,7 +6,7 @@ interface FooterProps {
 
 export default function Footer({ onOpenPanel }: FooterProps) {
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-ink-950/70 py-14">
+    <footer className="relative overflow-hidden border-t border-white/10 bg-ink-950/70 pb-28 pt-14 sm:pb-14">
       <LogoMark
         tone="dark"
         className="pointer-events-none absolute -bottom-16 -right-10 h-64 w-64 opacity-[0.06]"
@@ -27,10 +27,6 @@ export default function Footer({ onOpenPanel }: FooterProps) {
         <div className="flex flex-col items-center gap-4 sm:items-end">
           <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-white/55">
             <a href="#como-funciona" className="transition hover:text-brand-200">Plan</a>
-            <a href="#beneficios" className="transition hover:text-brand-200">Beneficios</a>
-            <a href="#referentes" className="transition hover:text-brand-200">Top</a>
-            <a href="#requisitos" className="transition hover:text-brand-200">Requisitos</a>
-            <a href="#faq" className="transition hover:text-brand-200">Preguntas</a>
             <a href="#postular" className="transition hover:text-brand-200">Postular</a>
             <button onClick={onOpenPanel} className="transition hover:text-brand-200">Panel interno</button>
           </nav>

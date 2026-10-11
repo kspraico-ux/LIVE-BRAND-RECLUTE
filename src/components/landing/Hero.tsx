@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
 import { avatarColor, initials } from '../../utils/ui'
 import { LogoMark } from '../Logo'
 import HeroBackdrop from './HeroBackdrop'
@@ -24,61 +23,13 @@ const proofStats = [
   'Respuesta habitual en <48 h',
 ]
 
-const heroStats = [
-  { value: 3.4, suffix: 'x', decimals: 1, label: 'Crecimiento medio de views en 90 días' },
-  { value: 78, suffix: '%', decimals: 0, label: 'De creadores supera su récord de regalos' },
-]
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  )
-}
-
-interface CountUpProps {
-  value: number
-  suffix: string
-  decimals: number
-}
-
-function CountUp({ value, suffix, decimals }: CountUpProps) {
-  const [display, setDisplay] = useState(value)
-  const frameRef = useRef(0)
-
-  useEffect(() => {
-    if (prefersReducedMotion()) return
-
-    const duration = 1100
-    const start = performance.now()
-    setDisplay(0)
-
-    const step = (now: number): void => {
-      const progress = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setDisplay(value * eased)
-      if (progress < 1) frameRef.current = window.requestAnimationFrame(step)
-    }
-
-    frameRef.current = window.requestAnimationFrame(step)
-    return () => window.cancelAnimationFrame(frameRef.current)
-  }, [value])
-
-  return (
-    <span>
-      {display.toFixed(decimals)}
-      {suffix}
-    </span>
-  )
-}
-
 interface HeroProps {
   onApply: () => void
 }
 
 export default function Hero({ onApply }: HeroProps) {
   return (
-    <section className="relative overflow-hidden pb-24 pt-36">
+    <section className="relative overflow-hidden pb-28 pt-36">
       <div className="pointer-events-none absolute inset-0">
         <HeroBackdrop />
       </div>
@@ -97,12 +48,12 @@ export default function Hero({ onApply }: HeroProps) {
           </span>
         </div>
 
-        <span className="eyebrow animate-fade-up">
+        <span className="eyebrow animate-fade-up [animation-delay:30ms]">
           <span className="h-2 w-2 animate-pulse-glow rounded-full bg-glow" />
           Reclutamiento abierto · Temporada 2026
         </span>
 
-        <h1 className="mx-auto mt-8 max-w-5xl animate-fade-up font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-8xl">
+        <h1 className="mx-auto mt-8 max-w-5xl animate-fade-up [animation-delay:60ms] font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-8xl">
           Convierte tus{' '}
           <span className="bg-gradient-to-r from-brand-300 via-glow to-brand-400 bg-clip-text text-transparent">
             lives en TikTok
@@ -110,13 +61,13 @@ export default function Hero({ onApply }: HeroProps) {
           en un negocio real
         </h1>
 
-        <p className="mx-auto mt-7 max-w-2xl animate-fade-up text-base leading-relaxed text-white/60 sm:text-lg">
+        <p className="mx-auto mt-7 max-w-2xl animate-fade-up [animation-delay:120ms] text-base leading-relaxed text-white/60 sm:text-lg">
           Live Brand es la agencia oficial de TikTok LIVE en LATAM: tomamos a creadores que ya hacen
           lives y los formamos con clases y asesorías gratuitas de profesionales de la plataforma y
           de crecimiento digital, para que cada live tenga más vistas, más regalos y más diamantes.
         </p>
 
-        <div className="mt-10 flex animate-fade-up flex-col items-center justify-center gap-4 sm:flex-row">
+        <div className="mt-10 flex animate-fade-up [animation-delay:180ms] flex-col items-center justify-center gap-4 sm:flex-row">
           <button onClick={onApply} className="btn-primary">
             Postularme gratis
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -128,12 +79,12 @@ export default function Hero({ onApply }: HeroProps) {
           </a>
         </div>
 
-        <p className="mx-auto mt-5 max-w-xl animate-fade-up text-sm font-medium leading-relaxed text-brand-200">
+        <p className="mx-auto mt-5 max-w-xl animate-fade-up [animation-delay:240ms] text-sm font-medium leading-relaxed text-brand-200">
           Inscripción 100% gratuita · Te contactamos en menos de 48 h (máximo 3 días) un pilar de la
           agencia
         </p>
 
-        <div className="mx-auto mt-8 flex max-w-3xl animate-fade-up flex-col items-center justify-center gap-5 sm:flex-row sm:gap-7">
+        <div className="mx-auto mt-8 flex max-w-3xl animate-fade-up [animation-delay:300ms] flex-col items-center justify-center gap-5 sm:flex-row sm:gap-7">
           <div className="flex flex-none -space-x-3" aria-hidden="true">
             {proofAvatars.map((name) => (
               <span
@@ -157,7 +108,7 @@ export default function Hero({ onApply }: HeroProps) {
           </ul>
         </div>
 
-        <div className="mx-auto mt-14 flex max-w-3xl animate-fade-up flex-wrap items-center justify-center gap-3">
+        <div className="mx-auto mt-14 flex max-w-3xl animate-fade-up [animation-delay:360ms] flex-wrap items-center justify-center gap-3">
           {highlights.map((item) => (
             <span
               key={item}
@@ -166,37 +117,6 @@ export default function Hero({ onApply }: HeroProps) {
               {item}
             </span>
           ))}
-        </div>
-
-        <div className="relative mx-auto mt-16 max-w-5xl">
-          <div className="card overflow-hidden p-1 shadow-card">
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-ink-800 via-ink-900 to-ink-800 px-6 py-10 sm:px-12 sm:py-14">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,0.35),transparent_60%)]" />
-              <div className="relative grid gap-6 sm:grid-cols-3">
-                {heroStats.map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-2xl border border-white/10 bg-ink-950/50 p-5 text-left backdrop-blur"
-                  >
-                    <div className="font-display text-3xl font-bold text-brand-300">
-                      <CountUp
-                        value={item.value}
-                        suffix={item.suffix}
-                        decimals={item.decimals}
-                      />
-                    </div>
-                    <div className="mt-2 text-sm leading-snug text-white/60">{item.label}</div>
-                  </div>
-                ))}
-                <div className="rounded-2xl border border-white/10 bg-ink-950/50 p-5 text-left backdrop-blur sm:col-span-1">
-                  <div className="font-display text-3xl font-bold text-brand-300">24/7</div>
-                  <div className="mt-2 text-sm leading-snug text-white/60">
-                    Soporte de equipo durante tus transmisiones
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>

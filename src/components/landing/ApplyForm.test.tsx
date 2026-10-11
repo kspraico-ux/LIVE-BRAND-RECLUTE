@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Applicant, NewApplicantData } from '../../types'
@@ -24,7 +24,7 @@ type User = ReturnType<typeof userEvent.setup>
 
 async function fillStep1(user: User, handle = 'anatest') {
   await user.type(screen.getByLabelText('@ de TikTok'), handle)
-  await user.selectOptions(screen.getByLabelText('Categoría principal'), 'Gaming')
+  await user.click(screen.getByRole('radio', { name: 'Gaming' }))
   await user.type(screen.getByLabelText('Seguidores'), '1200')
   await user.type(screen.getByLabelText('Viewers promedio en live'), '300')
 }
@@ -241,5 +241,109 @@ describe('ApplyForm', () => {
     expect(screen.getByText(/clases en vivo con profesionales de TikTok/i)).toBeInTheDocument()
     expect(screen.getByText(/sin costo de inscripción/i)).toBeInTheDocument()
     expect(screen.getByText(/plan de diamantes/i)).toBeInTheDocument()
+  })
+
+  it('ofrece las categorías como chips seleccionables', async () => {
+    const user = userEvent.setup()
+    render(<ApplyForm onSubmit={buildOnSubmit()} />)
+
+    const group = screen.getByRole('radiogroup', { name: 'Categoría principal' })
+    expect(within(group).getAllByRole('radio')).toHaveLength(7)
+
+    await user.click(within(group).getByRole('radio', { name: 'Gaming' }))
+
+    expect(within(group).getByRole('radio', { name: 'Gaming' })).toBeChecked()
+    expect(within(group).getByRole('radio', { name: 'Lifestyle' })).not.toBeChecked()
+  })
+
+  it('rellena las métricas con los atajos rápidos', async () => {
+    const user = userEvent.setup()
+    render(<ApplyForm onSubmit={buildOnSubmit()} />)
+
+    await user.click(screen.getByRole('button', { name: '10k – 100k' }))
+    expect(screen.getByLabelText('Seguidores')).toHaveValue(50000)
+
+    await user.click(screen.getByRole('button', { name: '100 – 500' }))
+    expect(screen.getByLabelText('Viewers promedio en live')).toHaveValue(300)
+
+    await user.click(screen.getByRole('button', { name: '10 h' }))
+    expect(screen.getByLabelText(/horas en vivo por semana/i)).toHaveValue(10)
+  })
+
+  it('valida al salir del campo sin esperar a Continuar', async () => {
+    const user = userEvent.setup()
+    render(<ApplyForm onSubmit={buildOnSubmit()} />)
+
+    const handle = screen.getByLabelText('@ de TikTok')
+    await user.type(handle, 'x')
+    await user.tab()
+
+    expect(screen.getByText('Ejemplo: @tucuenta')).toBeInTheDocument()
+    expect(handle).toHaveAttribute('aria-invalid', 'true')
+
+    await user.clear(handle)
+    await user.type(handle, 'cuentanueva')
+
+    expect(screen.queryByText('Ejemplo: @tucuenta')).not.toBeInTheDocument()
+    expect(handle).not.toHaveAttribute('aria-invalid')
+  })
+
+  it('muestra un resumen de errores al intentar avanzar', async () => {
+    const user = userEvent.setup()
+    render(<ApplyForm onSubmit={buildOnSubmit()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    expect(screen.getByText(/revisa los 4 campos marcados/i)).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Paso 2: Contacto' })).not.toBeInTheDocument()
+  })
+
+  it('oculta los campos opcionales del paso 2 hasta desplegarlos', async () => {
+    const user = userEvent.setup()
+    render(<ApplyForm onSubmit={buildOnSubmit()} />)
+
+    await fillStep1(user)
+    await goToStep2(user)
+
+    const toggle = screen.getByRole('button', { name: /opcional · mejora tu postulación/i })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByLabelText('Teléfono / WhatsApp')).not.toBeInTheDocument()
+
+    await user.click(toggle)
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByLabelText('Teléfono / WhatsApp')).toBeInTheDocument()
+    expect(screen.getByLabelText('¿Cómo te enteraste de Live Brand?')).toBeInTheDocument()
+
+    await user.click(toggle)
+
+    expect(screen.queryByLabelText('Teléfono / WhatsApp')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Nombre completo')).toBeInTheDocument()
+  })
+
+  it('muestra los requisitos mínimos junto al formulario', () => {
+    render(<ApplyForm onSubmit={buildOnSubmit()} />)
+
+    expect(screen.getByText('Requisitos mínimos')).toBeInTheDocument()
+    expect(screen.getByText('1.000 seguidores o 100 viewers promedio')).toBeInTheDocument()
+    expect(screen.getByText('5 horas o más en vivo por semana')).toBeInTheDocument()
+    expect(screen.getByText('TikTok LIVE habilitado en tu país')).toBeInTheDocument()
+    expect(screen.getByText('18 años o consentimiento de tutor')).toBeInTheDocument()
+  })
+
+  it('conserva los datos opcionales al colapsar y volver a desplegar', async () => {
+    const user = userEvent.setup()
+    render(<ApplyForm onSubmit={buildOnSubmit()} />)
+
+    await fillStep1(user)
+    await goToStep2(user)
+
+    const toggle = screen.getByRole('button', { name: /opcional · mejora tu postulación/i })
+    await user.click(toggle)
+    await user.type(screen.getByLabelText('Teléfono / WhatsApp'), '+56912345678')
+    await user.click(toggle)
+    await user.click(toggle)
+
+    expect(screen.getByLabelText('Teléfono / WhatsApp')).toHaveValue('+56912345678')
   })
 })

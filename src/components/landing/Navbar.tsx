@@ -3,10 +3,6 @@ import { LogoMark } from '../Logo'
 
 const links = [
   { href: '#como-funciona', label: 'Plan' },
-  { href: '#beneficios', label: 'Beneficios' },
-  { href: '#referentes', label: 'Top' },
-  { href: '#requisitos', label: 'Requisitos' },
-  { href: '#faq', label: 'Preguntas' },
   { href: '#postular', label: 'Postular' },
 ]
 
@@ -44,7 +40,7 @@ export default function Navbar({ onOpenPanel }: NavbarProps) {
           </span>
         </a>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-6 sm:flex">
           {links.map((link) => (
             <a
               key={link.href}

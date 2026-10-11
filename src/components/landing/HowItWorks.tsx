@@ -32,6 +32,10 @@ const pad = (index: number): string => String(index + 1).padStart(2, '0')
 export default function HowItWorks() {
   return (
     <section id="como-funciona" className="relative scroll-mt-24 py-24">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/40 to-transparent"
+      />
       <div className="container-page">
         <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow">

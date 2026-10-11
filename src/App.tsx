@@ -117,8 +117,8 @@ export default function App() {
       <Navbar onOpenPanel={openPanel} />
       <main id="main-content" tabIndex={-1}>
         <Hero onApply={goToApply} />
-        <HowItWorks />
         <ApplyForm onSubmit={addApplicant} takenHandles={applicants.map((a) => a.handle)} />
+        <HowItWorks />
       </main>
       <Footer onOpenPanel={openPanel} />
       <MobileCta onApply={goToApply} />

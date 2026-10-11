@@ -19,7 +19,9 @@ type FormState = {
   note: string
 }
 
-type FormErrors = Partial<Record<keyof FormState, string>>
+type ErrorField = keyof FormState | 'approved'
+
+type FormErrors = Partial<Record<ErrorField, string>>
 
 type Step = 1 | 2
 
@@ -54,13 +56,6 @@ const perks = [
   'Asesorías 1:1 de estrategia, ritmo y comunidad para cada transmisión',
   'Plan de diamantes: más regalos, más vistas y más ingresos por live',
   'Sin costo de inscripción, sin matrícula y sin permanencia mínima',
-]
-
-const requirements = [
-  '1.000 seguidores o 100 viewers promedio',
-  '5 horas o más en vivo por semana',
-  'TikTok LIVE habilitado en tu país',
-  '18 años o consentimiento de tutor',
 ]
 
 const nextSteps = [
@@ -104,7 +99,7 @@ const normalizeHandle = (value: string): string =>
 
 const clearOrSet = (
   errors: FormErrors,
-  field: keyof FormState,
+  field: ErrorField,
   message: string | undefined,
 ): FormErrors => {
   const next = { ...errors }
@@ -160,6 +155,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
   const [sendError, setSendError] = useState<string | null>(null)
   const [attempted, setAttempted] = useState(false)
   const [showOptional, setShowOptional] = useState(false)
+  const [approved, setApproved] = useState(false)
   const stepHeadingRef = useRef<HTMLHeadingElement>(null)
   const isFirstRender = useRef(true)
 
@@ -183,13 +179,16 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
         if (takenSet.includes(normalizeHandle(state.handle))) return 'Ese @ ya está en revisión'
         return undefined
       case 'followers':
-        if (!state.followers || Number(state.followers) < 0) return 'Indica tus seguidores'
+        if (state.followers && (!Number.isFinite(Number(state.followers)) || Number(state.followers) < 0))
+          return 'Indica un número válido'
         return undefined
       case 'avgViewers':
-        if (!state.avgViewers || Number(state.avgViewers) < 0) return 'Indica viewers promedio'
+        if (state.avgViewers && (!Number.isFinite(Number(state.avgViewers)) || Number(state.avgViewers) < 0))
+          return 'Indica un número válido'
         return undefined
       case 'hoursPerWeek':
-        if (state.hoursPerWeek && Number(state.hoursPerWeek) < 0) return 'Indica horas válidas'
+        if (state.hoursPerWeek && (!Number.isFinite(Number(state.hoursPerWeek)) || Number(state.hoursPerWeek) < 0))
+          return 'Indica un número válido'
         return undefined
       case 'category':
         if (!state.category) return 'Selecciona una categoría'
@@ -211,6 +210,9 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
       const message = validateField(field)
       if (message) next[field] = message
     }
+    if (target === 1 && !approved) {
+      next.approved = 'Confirma tu aprobación por TikTok LATAM para postular'
+    }
     return next
   }
 
@@ -231,6 +233,14 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
 
   const touch = (field: keyof FormState) => (): void => {
     setErrors((prev) => clearOrSet(prev, field, validateField(field)))
+  }
+
+  const toggleApproved = (event: ChangeEvent<HTMLInputElement>): void => {
+    const checked = event.target.checked
+    setApproved(checked)
+    setErrors((prev) =>
+      clearOrSet(prev, 'approved', checked ? undefined : 'Confirma tu aprobación por TikTok LATAM para postular'),
+    )
   }
 
   const goToStep2 = (): void => {
@@ -296,8 +306,8 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
       ...form,
       name: form.name.trim(),
       handle: form.handle.trim().startsWith('@') ? form.handle.trim() : `@${form.handle.trim()}`,
-      followers: Number(form.followers),
-      avgViewers: Number(form.avgViewers),
+      followers: form.followers ? Number(form.followers) : 0,
+      avgViewers: form.avgViewers ? Number(form.avgViewers) : 0,
       hoursPerWeek: Number(form.hoursPerWeek || 0),
     }
 
@@ -322,6 +332,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
       setSendError(null)
       setAttempted(false)
       setShowOptional(false)
+      setApproved(false)
     })()
   }
 
@@ -400,7 +411,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
   }
 
   return (
-    <section id="postular" className="relative scroll-mt-24 py-24">
+    <section id="postular" className="relative scroll-mt-24 pb-24 pt-10 sm:pt-14">
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/30 blur-[150px]" />
       <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-glow/15 blur-[120px]" />
 
@@ -438,22 +449,14 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
               ))}
             </ul>
 
-            <div className="mt-8 rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5">
-              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200">
-                Requisitos mínimos
+            <div className="mt-8 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5">
+              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                Único requisito
               </p>
-              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                {requirements.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-white/70">
-                    <span className="mt-0.5 grid h-4 w-4 flex-none place-items-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/40">
-                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3.5">
-                        <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              <p className="mt-3 text-sm leading-relaxed text-white/75">
+                Haber sido aprobado previamente como potencial emergente por TikTok LIVE LATAM. Si
+                TikTok ya te marcó como talento de lives, tu entrada es gratuita.
+              </p>
             </div>
 
             <div className="mt-6 rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5">
@@ -590,7 +593,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                 </h3>
                 <p className="mt-1 text-xs text-white/60">
                   {step === 1
-                    ? '2 minutos, sin CV y sin costo. Cuéntanos cómo está tu cuenta de TikTok hoy.'
+                    ? '2 minutos, sin CV y sin costo. Solo tu @, tu categoría y tu confirmación de TikTok.'
                     : '¿Cómo te contactamos para tu clase de diagnóstico gratuita?'}
                 </p>
               </div>
@@ -676,8 +679,11 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                   </div>
 
                   <div>
-                    <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="followers">
+                    <label className="label" htmlFor="followers">
                       Seguidores
+                      <span className="ml-1.5 font-normal normal-case tracking-normal text-white/45">
+                        (opcional)
+                      </span>
                     </label>
                     <input
                       id="followers"
@@ -696,8 +702,11 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                   </div>
 
                   <div>
-                    <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="avgViewers">
+                    <label className="label" htmlFor="avgViewers">
                       Viewers promedio en live
+                      <span className="ml-1.5 font-normal normal-case tracking-normal text-white/45">
+                        (opcional)
+                      </span>
                     </label>
                     <input
                       id="avgViewers"
@@ -743,8 +752,29 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                   </div>
 
                   <p className="text-xs text-white/60 sm:col-span-2">
-                    Mínimo 1.000 seguidores o 100 viewers promedio, y 5 horas semanales en vivo.
+                    Opcional: compartir tus métricas nos ayuda a preparar tu diagnóstico.
                   </p>
+
+                  <div className="sm:col-span-2">
+                    <label
+                      htmlFor="tiktok-approval"
+                      className="flex cursor-pointer items-start gap-3 rounded-xl border border-brand-400/30 bg-brand-500/10 p-4 transition hover:border-brand-400/60"
+                    >
+                      <input
+                        id="tiktok-approval"
+                        type="checkbox"
+                        checked={approved}
+                        onChange={toggleApproved}
+                        {...fieldAria('approved')}
+                        className="mt-0.5 h-4 w-4 flex-none accent-brand-500"
+                      />
+                      <span className="text-sm leading-relaxed text-white/80">
+                        Confirmo que fui aprobado previamente como potencial emergente por TikTok
+                        LATAM
+                      </span>
+                    </label>
+                    {errorFor('approved')}
+                  </div>
                 </div>
               ) : (
                 <div key={2} className="grid animate-fade-up gap-5 sm:grid-cols-2">

@@ -14,7 +14,7 @@ describe('App', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { level: 1, name: /lives en TikTok/ }),
+      screen.getByRole('heading', { level: 1, name: /talento de lives/ }),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /panel interno/i })).toBeInTheDocument()
   })
@@ -27,7 +27,7 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Resumen de la convocatoria' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /lives en TikTok/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /talento de lives/ })).not.toBeInTheDocument()
   })
 
   it('renderiza el 404 con un hash desconocido', () => {
@@ -36,7 +36,7 @@ describe('App', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /lives en TikTok/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /talento de lives/ })).not.toBeInTheDocument()
   })
 
   it('incluye el plan de reclutamiento y el formulario en la landing', () => {
@@ -85,7 +85,7 @@ describe('App', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { level: 1, name: /lives en TikTok/ }),
+      screen.getByRole('heading', { level: 1, name: /talento de lives/ }),
     ).toBeInTheDocument()
 
     await act(async () => {
@@ -96,6 +96,6 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Resumen de la convocatoria' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /lives en TikTok/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /talento de lives/ })).not.toBeInTheDocument()
   })
 })

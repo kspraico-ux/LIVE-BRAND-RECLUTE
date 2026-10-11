@@ -25,8 +25,9 @@ type User = ReturnType<typeof userEvent.setup>
 async function fillStep1(user: User, handle = 'anatest') {
   await user.type(screen.getByLabelText('@ de TikTok'), handle)
   await user.click(screen.getByRole('radio', { name: 'Gaming' }))
-  await user.type(screen.getByLabelText('Seguidores'), '1200')
-  await user.type(screen.getByLabelText('Viewers promedio en live'), '300')
+  await user.type(screen.getByLabelText(/seguidores/i), '1200')
+  await user.type(screen.getByLabelText(/viewers promedio en live/i), '300')
+  await user.click(screen.getByRole('checkbox', { name: /confirmo que fui aprobado/i }))
 }
 
 async function goToStep2(user: User) {
@@ -60,9 +61,8 @@ describe('ApplyForm', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
 
     expect(screen.getByText('Ejemplo: @tucuenta')).toBeInTheDocument()
-    expect(screen.getByText('Indica tus seguidores')).toBeInTheDocument()
-    expect(screen.getByText('Indica viewers promedio')).toBeInTheDocument()
     expect(screen.getByText('Selecciona una categoría')).toBeInTheDocument()
+    expect(screen.getByText(/confirma tu aprobación por tiktok latam/i)).toBeInTheDocument()
     expect(screen.getByLabelText('@ de TikTok')).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByLabelText('@ de TikTok')).toHaveAttribute('aria-describedby', 'handle-error')
     expect(screen.queryByRole('heading', { name: 'Paso 2: Contacto' })).not.toBeInTheDocument()
@@ -103,7 +103,7 @@ describe('ApplyForm', () => {
 
     expect(screen.getByRole('heading', { name: 'Paso 1: Tu perfil' })).toBeInTheDocument()
     expect(screen.getByLabelText('@ de TikTok')).toHaveValue('anatest')
-    expect(screen.getByLabelText('Seguidores')).toHaveValue(1200)
+    expect(screen.getByLabelText(/seguidores/i)).toHaveValue(1200)
     expect(screen.queryByLabelText('Nombre completo')).not.toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Progreso de la postulación' })).toHaveAttribute(
       'aria-valuenow',
@@ -261,10 +261,10 @@ describe('ApplyForm', () => {
     render(<ApplyForm onSubmit={buildOnSubmit()} />)
 
     await user.click(screen.getByRole('button', { name: '10k – 100k' }))
-    expect(screen.getByLabelText('Seguidores')).toHaveValue(50000)
+    expect(screen.getByLabelText(/seguidores/i)).toHaveValue(50000)
 
     await user.click(screen.getByRole('button', { name: '100 – 500' }))
-    expect(screen.getByLabelText('Viewers promedio en live')).toHaveValue(300)
+    expect(screen.getByLabelText(/viewers promedio en live/i)).toHaveValue(300)
 
     await user.click(screen.getByRole('button', { name: '10 h' }))
     expect(screen.getByLabelText(/horas en vivo por semana/i)).toHaveValue(10)
@@ -294,7 +294,7 @@ describe('ApplyForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
 
-    expect(screen.getByText(/revisa los 4 campos marcados/i)).toBeInTheDocument()
+    expect(screen.getByText(/revisa los 3 campos marcados/i)).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Paso 2: Contacto' })).not.toBeInTheDocument()
   })
 
@@ -321,14 +321,59 @@ describe('ApplyForm', () => {
     expect(screen.queryByLabelText('Nombre completo')).toBeInTheDocument()
   })
 
-  it('muestra los requisitos mínimos junto al formulario', () => {
+  it('muestra el requisito único de TikTok LATAM y la caja correspondiente', () => {
     render(<ApplyForm onSubmit={buildOnSubmit()} />)
 
-    expect(screen.getByText('Requisitos mínimos')).toBeInTheDocument()
-    expect(screen.getByText('1.000 seguidores o 100 viewers promedio')).toBeInTheDocument()
-    expect(screen.getByText('5 horas o más en vivo por semana')).toBeInTheDocument()
-    expect(screen.getByText('TikTok LIVE habilitado en tu país')).toBeInTheDocument()
-    expect(screen.getByText('18 años o consentimiento de tutor')).toBeInTheDocument()
+    expect(screen.getByText('Único requisito')).toBeInTheDocument()
+    expect(
+      screen.getByText(/aprobado previamente como potencial emergente por tiktok live latam/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/1\.000 seguidores/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/5 horas semanales en vivo/i)).not.toBeInTheDocument()
+  })
+
+  it('exige el checkbox de aprobación de TikTok LATAM en el paso 1', async () => {
+    const user = userEvent.setup()
+    const onSubmit = buildOnSubmit()
+    render(<ApplyForm onSubmit={onSubmit} />)
+
+    await user.type(screen.getByLabelText('@ de TikTok'), 'cuentanueva')
+    await user.click(screen.getByRole('radio', { name: 'Gaming' }))
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    expect(
+      screen.getByText(/confirma tu aprobación por tiktok latam/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Paso 2: Contacto' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox', { name: /confirmo que fui aprobado/i }))
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    expect(screen.getByRole('heading', { name: 'Paso 2: Contacto' })).toBeInTheDocument()
+  })
+
+  it('permite enviar sin métricas porque son opcionales', async () => {
+    const user = userEvent.setup()
+    const onSubmit = buildOnSubmit()
+    submitMock.mockResolvedValue({ ok: true, status: 200 })
+    render(<ApplyForm onSubmit={onSubmit} />)
+
+    await user.type(screen.getByLabelText('@ de TikTok'), 'sinmetricas')
+    await user.click(screen.getByRole('radio', { name: 'Gaming' }))
+    await user.click(screen.getByRole('checkbox', { name: /confirmo que fui aprobado/i }))
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    expect(screen.getByRole('heading', { name: 'Paso 2: Contacto' })).toBeInTheDocument()
+
+    await fillStep2(user)
+    await user.click(screen.getByRole('button', { name: /enviar mi inscripción gratis/i }))
+
+    expect(await screen.findByRole('heading', { name: '¡Inscripción enviada!' })).toBeInTheDocument()
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    const data = onSubmit.mock.calls[0][0]
+    expect(data.followers).toBe(0)
+    expect(data.avgViewers).toBe(0)
+    expect(data.hoursPerWeek).toBe(0)
   })
 
   it('conserva los datos opcionales al colapsar y volver a desplegar', async () => {

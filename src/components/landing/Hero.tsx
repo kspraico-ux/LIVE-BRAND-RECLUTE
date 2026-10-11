@@ -29,7 +29,7 @@ interface HeroProps {
 
 export default function Hero({ onApply }: HeroProps) {
   return (
-    <section className="relative overflow-hidden pb-28 pt-36">
+    <section className="relative overflow-hidden pb-16 pt-36">
       <div className="pointer-events-none absolute inset-0">
         <HeroBackdrop />
       </div>
@@ -50,21 +50,25 @@ export default function Hero({ onApply }: HeroProps) {
 
         <span className="eyebrow animate-fade-up [animation-delay:30ms]">
           <span className="h-2 w-2 animate-pulse-glow rounded-full bg-glow" />
-          Reclutamiento abierto · Temporada 2026
+          Único requisito: aprobación de TikTok LATAM
         </span>
 
         <h1 className="mx-auto mt-8 max-w-5xl animate-fade-up [animation-delay:60ms] font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-8xl">
-          Convierte tus{' '}
+          Si TikTok te considera un{' '}
           <span className="bg-gradient-to-r from-brand-300 via-glow to-brand-400 bg-clip-text text-transparent">
-            lives en TikTok
-          </span>{' '}
-          en un negocio real
+            talento de lives
+          </span>
+          , aquí{' '}
+          <span className="bg-gradient-to-r from-brand-300 via-glow to-brand-400 bg-clip-text text-transparent">
+            entras gratis
+          </span>
         </h1>
 
         <p className="mx-auto mt-7 max-w-2xl animate-fade-up [animation-delay:120ms] text-base leading-relaxed text-white/60 sm:text-lg">
-          Live Brand es la agencia oficial de TikTok LIVE en LATAM: tomamos a creadores que ya hacen
-          lives y los formamos con clases y asesorías gratuitas de profesionales de la plataforma y
-          de crecimiento digital, para que cada live tenga más vistas, más regalos y más diamantes.
+          Live Brand es la agencia oficial de TikTok LIVE en LATAM. Si TikTok ya te aprobó como
+          potencial emergente, únete gratis: te formamos con clases y asesorías de profesionales de
+          la plataforma y de crecimiento digital, para que cada live tenga más vistas, más regalos y
+          más diamantes.
         </p>
 
         <div className="mt-10 flex animate-fade-up [animation-delay:180ms] flex-col items-center justify-center gap-4 sm:flex-row">

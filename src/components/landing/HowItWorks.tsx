@@ -5,7 +5,7 @@ const steps = [
     time: 'Minuto 0 · 2 minutos',
     title: 'Postula gratis, sin CV',
     description:
-      'Completa el formulario con tu @, tu categoría y tus métricas actuales. Sin carta de presentación y sin pagar nada.',
+      'Completa el formulario con tu @ y tu categoría. Sin carta de presentación y sin pagar nada.',
   },
   {
     time: 'Días 1 a 3 · Contacto de un pilar',

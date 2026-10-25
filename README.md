@@ -38,7 +38,7 @@ npm test         # tests (npm run test:watch para watch mode)
 
 ## Despliegue
 
-- **GitHub Pages**: cada push a `main` compila el sitio y publica `dist/` mediante `.github/workflows/deploy-pages.yml`. No hace falta subir archivos generados ni mantener una rama `gh-pages`.
-- **Netlify / Vercel**: build command `npm run build`, output directory `dist`. No se requieren redirects (ruteo por hash).
+- **Vercel**: conecta este repositorio y deja `main` como Production Branch. Build command: `npm run build`; Output Directory: `dist`. Los pushes a `main` disparan el despliegue de producción. El ruteo usa hash, por lo que no necesita redirects.
+- Para validar localmente: `npm run build` y `npm run preview`.
 - Configura el dominio definitivo en `index.html` (`canonical`, `og:url`, `og:image` y JSON-LD).
 - El endpoint de Formspree (`https://formspree.io/f/mppwnnng`) está en `src/services/formspree.ts`; cámbialo si usas otro formulario.

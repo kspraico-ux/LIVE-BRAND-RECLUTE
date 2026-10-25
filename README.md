@@ -38,8 +38,7 @@ npm test         # tests (npm run test:watch para watch mode)
 
 ## Despliegue
 
-1. `npm run build` → genera `dist/` (rutas relativas con `base: './'`, sirve en cualquier subdirectorio).
-2. **GitHub Pages**: publica la carpeta `dist/` en la rama `gh-pages` (o como `docs/` con Actions). `public/404.html` redirige rutas desconocidas al inicio.
-3. **Netlify / Vercel**: build command `npm run build`, output directory `dist`. No se requieren redirects (ruteo por hash).
-4. Configura tu dominio definitivo en `index.html` (comentarios `SITE_URL`: `canonical`, `og:url`, `og:image`, JSON-LD) y actualiza `SITE_URL` ahí mismo.
-5. El endpoint de Formspree (`https://formspree.io/f/mppwnnng`) está en `src/services/formspree.ts`; cámbialo si usas otro formulario.
+- **GitHub Pages**: cada push a `main` compila el sitio y publica `dist/` mediante `.github/workflows/deploy-pages.yml`. No hace falta subir archivos generados ni mantener una rama `gh-pages`.
+- **Netlify / Vercel**: build command `npm run build`, output directory `dist`. No se requieren redirects (ruteo por hash).
+- Configura el dominio definitivo en `index.html` (`canonical`, `og:url`, `og:image` y JSON-LD).
+- El endpoint de Formspree (`https://formspree.io/f/mppwnnng`) está en `src/services/formspree.ts`; cámbialo si usas otro formulario.

@@ -27,7 +27,7 @@ export default function MobileCta({ onApply }: MobileCtaProps) {
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-white/10 bg-ink-950/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl animate-fade-up">
+    <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] border-t border-white/10 bg-ink-950/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl animate-fade-up">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-display text-xs font-semibold text-white">

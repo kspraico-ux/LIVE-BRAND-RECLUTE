@@ -19,6 +19,15 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /panel interno/i })).toBeInTheDocument()
   })
 
+  it('mantiene el header acotado al ancho móvil sin CTA que expanda el lienzo', () => {
+    render(<App />)
+
+    const header = screen.getByRole('banner')
+    expect(header).toHaveClass('inset-x-0', 'max-w-[480px]', 'overflow-x-clip')
+    expect(header).not.toHaveClass('-translate-x-1/2')
+    expect(header.querySelector('a[href="#postular"]')).toHaveClass('!shadow-none')
+  })
+
   it('renderiza el panel con hash #/panel', async () => {
     window.location.hash = '#/panel'
 

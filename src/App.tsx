@@ -113,7 +113,7 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-[480px] overflow-hidden border-x border-white/5">
+    <div className="mx-auto min-h-screen w-full min-w-0 max-w-[480px] overflow-x-clip">
       <Navbar />
       <main id="main-content" tabIndex={-1}>
         <Hero onApply={goToApply} />

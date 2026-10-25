@@ -14,7 +14,7 @@ describe('App', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i }),
+      screen.getByRole('heading', { level: 1, name: /tus lives pueden llegar mucho más lejos/i }),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /panel interno/i })).toBeInTheDocument()
   })
@@ -23,7 +23,7 @@ describe('App', () => {
     render(<App />)
 
     const header = screen.getByRole('banner')
-    expect(header).toHaveClass('inset-x-0', 'max-w-[480px]', 'overflow-x-clip')
+    expect(header).toHaveClass('inset-x-0', 'max-w-[1440px]', 'overflow-x-clip')
     expect(header).not.toHaveClass('-translate-x-1/2')
     expect(header.querySelector('a[href="#postular"]')).toHaveClass('!shadow-none')
   })
@@ -36,7 +36,7 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Resumen de la convocatoria' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /tus lives pueden llegar mucho más lejos/i })).not.toBeInTheDocument()
   })
 
   it('renderiza el 404 con un hash desconocido', () => {
@@ -45,7 +45,7 @@ describe('App', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /tus lives pueden llegar mucho más lejos/i })).not.toBeInTheDocument()
   })
 
   it('incluye el plan de reclutamiento y el formulario en la landing', () => {
@@ -56,6 +56,17 @@ describe('App', () => {
     expect(screen.getAllByText(/respuesta en un máximo de 3 días/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /empezar mi postulación/i })).toBeInTheDocument()
     expect(screen.getByText(/TikTok LATAM te aprobó como talento emergente/i)).toBeInTheDocument()
+  })
+
+  it('muestra la galería continua de referentes con créditos y aviso de no afiliación', () => {
+    render(<App />)
+
+    const gallery = screen.getByRole('region', { name: /creadores populares de tiktok/i })
+    expect(gallery.querySelectorAll('img')).toHaveLength(10)
+    expect(screen.getByText(/no implican colaboración ni respaldo/i)).toBeInTheDocument()
+
+    const credits = screen.getByText('Créditos de imágenes')
+    expect(credits.closest('details')).toBeInTheDocument()
   })
 
   it('no muestra las secciones retiradas del landing', () => {
@@ -93,7 +104,7 @@ describe('App', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i }),
+      screen.getByRole('heading', { level: 1, name: /tus lives pueden llegar mucho más lejos/i }),
     ).toBeInTheDocument()
 
     await act(async () => {
@@ -104,6 +115,6 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Resumen de la convocatoria' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /tus lives pueden llegar mucho más lejos/i })).not.toBeInTheDocument()
   })
 })

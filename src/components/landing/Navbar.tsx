@@ -13,7 +13,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-[480px] overflow-x-clip transition duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-[1440px] overflow-x-clip transition duration-300 ${
         scrolled ? 'border-b border-white/10 bg-ink-950/80 backdrop-blur-xl' : 'bg-transparent'
       }`}
     >

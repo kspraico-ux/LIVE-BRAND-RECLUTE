@@ -88,4 +88,36 @@
   .eyebrow {
     @apply inline-flex items-center gap-2 rounded-full border border-brand-400/30 bg-brand-500/10 px-4 py-1.5 font-display text-xs font-semibold uppercase tracking-[0.2em] text-brand-200;
   }
+
+  .creator-track {
+    animation: creator-marquee 42s linear infinite;
+    will-change: transform;
+  }
+
+  .creator-viewport:hover .creator-track,
+  .creator-viewport:focus-within .creator-track {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes creator-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creator-viewport {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .creator-viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .creator-track {
+    animation: none;
+    transform: none;
+  }
 }

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Applicant, NewApplicantData } from '../../types'
 import { submitToFormspree } from '../../services/formspree'
-import { avatarColor, initials } from '../../utils/ui'
 import { LogoMark } from '../Logo'
 
 type FormState = {
@@ -50,21 +49,6 @@ const sources = [
   'Búsqueda en Google',
   'Otro',
 ]
-
-const perks = [
-  'Clases en vivo con profesionales de TikTok y coaches de crecimiento digital',
-  'Asesorías 1:1 de estrategia, ritmo y comunidad para cada transmisión',
-  'Plan de diamantes: más regalos, más vistas y más ingresos por live',
-  'Sin costo de inscripción, sin matrícula y sin permanencia mínima',
-]
-
-const nextSteps = [
-  'Envías tu perfil de TikTok en 2 minutos',
-  'En menos de 48 h (máx. 3 días) te contacta un pilar de la agencia',
-  'Entras a las clases gratuitas y arrancas tu plan de crecimiento',
-]
-
-const proofAvatars = ['Luna Vargas', 'Mateo Cruz', 'Sofía Rivas', 'Kevin Ortiz']
 
 type QuickOption = { label: string; value: string }
 
@@ -155,6 +139,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
   const [sendError, setSendError] = useState<string | null>(null)
   const [attempted, setAttempted] = useState(false)
   const [showOptional, setShowOptional] = useState(false)
+  const [showMetrics, setShowMetrics] = useState(false)
   const [approved, setApproved] = useState(false)
   const stepHeadingRef = useRef<HTMLHeadingElement>(null)
   const isFirstRender = useRef(true)
@@ -332,6 +317,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
       setSendError(null)
       setAttempted(false)
       setShowOptional(false)
+      setShowMetrics(false)
       setApproved(false)
     })()
   }
@@ -357,10 +343,10 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
 
   if (submitted) {
     return (
-      <section id="postular" className="relative scroll-mt-24 py-24">
+      <section id="postular" className="relative scroll-mt-24 px-4 py-12">
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/30 blur-[150px]" />
-        <div className="container-page relative">
-          <div className="card mx-auto max-w-2xl animate-fade-up p-8 text-center sm:p-12" role="status" aria-live="polite">
+        <div className="relative mx-auto max-w-md">
+          <div className="card animate-fade-up p-6 text-center" role="status" aria-live="polite">
             <div className="relative mx-auto h-16 w-16">
               <div className="grid h-16 w-16 place-items-center rounded-2xl border border-brand-400/40 bg-ink-900 shadow-glow">
                 <LogoMark tone="dark" className="h-10 w-10 drop-shadow-[0_0_10px_rgba(217,70,239,0.6)]" />
@@ -377,32 +363,20 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
             </span>
 
             <h3 className="mt-4 font-display text-3xl font-bold text-white">¡Inscripción enviada!</h3>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/60">
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/70">
               Listo, <span className="text-brand-300">{submitted.name}</span>. Tu perfil de{' '}
-              <span className="text-brand-300">{submitted.handle}</span> quedó en revisión con estado{' '}
-              <span className="text-amber-300">Pendiente</span>. Te escribimos a{' '}
-              <span className="text-brand-300">{submitted.email}</span> en menos de 48 h (máximo
-              3 días) un pilar de la agencia, con tu diagnóstico gratis.
+              <span className="text-brand-300">{submitted.handle}</span> está en revisión. Te
+              contactaremos a <span className="text-brand-300">{submitted.email}</span> en un
+              máximo de 3 días.
             </p>
 
-            <ol className="mx-auto mt-8 grid max-w-md gap-3 text-left">
-              {nextSteps.map((item, index) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-white/70">
-                  <span className="grid h-6 w-6 flex-none place-items-center rounded-full bg-gradient-to-br from-brand-500 to-glow font-display text-[11px] font-bold text-white">
-                    {index + 1}
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ol>
-
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href="#como-funciona" className="btn-primary">
-                Ver el plan de reclutamiento
-              </a>
-              <button onClick={() => setSubmitted(null)} className="btn-ghost">
+            <div className="mt-7 flex flex-col gap-3">
+              <button onClick={() => setSubmitted(null)} className="btn-primary w-full">
                 Inscribir otro perfil
               </button>
+              <a href="#como-funciona" className="py-2 text-sm text-white/65 underline underline-offset-4">
+                Ver los pasos siguientes
+              </a>
             </div>
           </div>
         </div>
@@ -411,115 +385,22 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
   }
 
   return (
-    <section id="postular" className="relative scroll-mt-24 pb-24 pt-10 sm:pt-14">
+    <section id="postular" className="relative scroll-mt-24 px-4 pb-12 pt-5">
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/30 blur-[150px]" />
       <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-glow/15 blur-[120px]" />
 
-      <div className="container-page relative">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
-          <div className="order-2 lg:order-1">
-            <span className="eyebrow animate-fade-up">
-              <LogoMark tone="dark" className="h-4 w-4" alt="" />
-              Inscripción 100% gratuita
-            </span>
-            <h2 className="section-title mt-6 animate-fade-up">
-              Aprende con profesionales de <span className="text-brand-300">TikTok</span> y sube
-              tus <span className="text-brand-300">diamantes</span>
-            </h2>
-            <p className="mt-5 animate-fade-up text-white/60">
-              Live Brand es la agencia oficial de TikTok LIVE en LATAM. Tomamos a creadores que ya
-              hacen lives y los formamos con clases y asesorías directas de profesionales de la
-              plataforma y de crecimiento digital: mejoras tu live, ganas más diamantes y construyes
-              un negocio real en la app.
-            </p>
-
-            <ul className="mt-8 space-y-4">
-              {perks.map((item) => (
-                <li
-                  key={item}
-                  className="flex animate-fade-up items-start gap-3 text-sm text-white/70"
-                >
-                  <span className="mt-0.5 grid h-5 w-5 flex-none place-items-center rounded-full bg-brand-500/20 text-brand-300">
-                    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3">
-                      <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-8 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5">
-              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
-                Único requisito
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-white/75">
-                Haber sido aprobado previamente como potencial emergente por TikTok LIVE LATAM. Si
-                TikTok ya te marcó como talento de lives, tu entrada es gratuita.
-              </p>
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5">
-              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200">
-                Qué pasa después de enviar tu inscripción
-              </p>
-              <ol className="mt-4 space-y-3">
-                {nextSteps.map((item, index) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-white/70">
-                    <span className="grid h-6 w-6 flex-none place-items-center rounded-full bg-gradient-to-br from-brand-500 to-glow font-display text-[11px] font-bold text-white shadow-glow-sm">
-                      {index + 1}
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ol>
-            </div>
-
-            <div className="mt-6 flex items-center gap-4 rounded-2xl border border-white/10 bg-ink-800/60 p-5 backdrop-blur-xl">
-              <div className="flex flex-none -space-x-3" aria-hidden="true">
-                {proofAvatars.map((name) => (
-                  <span
-                    key={name}
-                    className={`grid h-9 w-9 place-items-center rounded-full border-2 border-ink-800 bg-gradient-to-br ${avatarColor(
-                      name,
-                    )} font-display text-[10px] font-bold text-white`}
-                  >
-                    {initials(name)}
-                  </span>
-                ))}
-              </div>
-              <div>
-                <p className="font-display text-sm font-semibold text-white">
-                  +320 creadores ya confían en Live Brand
-                </p>
-                <p className="mt-0.5 text-xs text-white/60">
-                  Respuesta en menos de 48 h (máximo 3 días) · +3.400 h de live gestionadas al mes
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-white/10 bg-ink-800/60 p-5">
-              <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 flex-none place-items-center rounded-lg border border-brand-400/30 bg-ink-900/70">
-                  <LogoMark tone="dark" className="h-5 w-5" />
-                </span>
-                <p className="text-sm text-white/70">
-                  <span className="font-semibold text-brand-200">¿Ya eres parte?</span> Entra al{' '}
-                  <a href="#/panel" className="font-semibold text-glow underline underline-offset-4">
-                    panel interno
-                  </a>{' '}
-                  para gestionar postulantes.
-                </p>
-              </div>
-            </div>
-          </div>
-
+      <div className="relative mx-auto max-w-md">
+        <div className="mb-5">
+          <p className="font-display text-xs font-semibold uppercase text-emerald-300">Postulación gratuita</p>
+          <h2 className="mt-2 font-display text-2xl font-bold leading-tight text-white">Cuéntanos de tus lives</h2>
+          <p className="mt-2 text-sm text-white/60">Solo pedimos lo necesario para revisar tu perfil y contactarte.</p>
+        </div>
           <form
             onSubmit={handleSubmit}
-            className="relative order-1 animate-fade-up rounded-3xl bg-gradient-to-br from-brand-400/70 via-white/10 to-glow/60 p-px shadow-card lg:order-2"
+            className="relative animate-fade-up rounded-2xl bg-gradient-to-br from-brand-400/70 via-white/10 to-glow/60 p-px shadow-card"
             noValidate
           >
-            <div className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-ink-900/85 p-7 backdrop-blur-xl sm:p-9">
+            <div className="relative overflow-hidden rounded-[calc(1rem-1px)] bg-ink-900/90 p-5 backdrop-blur-xl">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.28),transparent_70%)]" />
 
               <div className="relative mb-7">
@@ -622,7 +503,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
               )}
 
               {step === 1 ? (
-                <div key={1} className="grid animate-fade-up gap-5 sm:grid-cols-2">
+                <div key={1} className="grid animate-fade-up gap-5">
                   <div className="sm:col-span-2">
                     <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="handle">
                       @ de TikTok
@@ -678,6 +559,18 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                     {errorFor('category')}
                   </div>
 
+                  <button
+                    type="button"
+                    aria-expanded={showMetrics}
+                    onClick={() => setShowMetrics((visible) => !visible)}
+                    className="flex w-full items-center justify-between rounded-xl border border-dashed border-white/15 px-4 py-3 text-left text-sm text-white/65"
+                  >
+                    Añadir métricas (opcional)
+                    <span aria-hidden="true">{showMetrics ? '−' : '+'}</span>
+                  </button>
+
+                  {showMetrics && (
+                    <>
                   <div>
                     <label className="label" htmlFor="followers">
                       Seguidores
@@ -754,6 +647,8 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                   <p className="text-xs text-white/60 sm:col-span-2">
                     Opcional: compartir tus métricas nos ayuda a preparar tu diagnóstico.
                   </p>
+                    </>
+                  )}
 
                   <div className="sm:col-span-2">
                     <label
@@ -777,7 +672,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                   </div>
                 </div>
               ) : (
-                <div key={2} className="grid animate-fade-up gap-5 sm:grid-cols-2">
+                <div key={2} className="grid animate-fade-up gap-5">
                   <div className="sm:col-span-2">
                     <label className="label after:ml-0.5 after:text-glow after:content-['*']" htmlFor="name">
                       Nombre completo
@@ -820,7 +715,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                       aria-expanded={showOptional}
                       className="flex w-full items-center justify-between gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-3 text-left font-display text-xs font-semibold uppercase tracking-[0.16em] text-white/60 transition hover:border-brand-400/50 hover:text-brand-200"
                     >
-                      Opcional · mejora tu postulación
+                      Añadir datos opcionales
                       <svg
                         viewBox="0 0 24 24"
                         className={`h-4 w-4 transition-transform duration-300 ${
@@ -836,7 +731,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                     </button>
 
                     {showOptional && (
-                      <div className="mt-5 grid animate-fade-up gap-5 sm:grid-cols-2">
+                      <div className="mt-5 grid animate-fade-up gap-5">
                         <div>
                           <label className="label" htmlFor="phone">
                             Teléfono / WhatsApp
@@ -904,8 +799,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
               )}
 
               <p className="mt-6 text-xs font-medium text-brand-200">
-                Inscripción gratuita y sin compromiso · Cupos limitados por categoría · Te contactamos
-                en menos de 48 h (máximo 3 días).
+                Gratis y sin compromiso · Respuesta en un máximo de 3 días.
               </p>
 
               {sendError && (
@@ -918,19 +812,18 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                 </div>
               )}
 
-              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1 text-xs text-white/60">
-                  <p>Solo usamos tus datos para contactarte sobre la convocatoria.</p>
-                  <p>Los enviamos a nuestro equipo de admisión y se guardan en este dispositivo.</p>
+              <div className="mt-4 flex flex-col gap-4">
+                <div className="text-xs text-white/55">
+                  <p>Usamos tus datos solo para contactarte sobre esta convocatoria.</p>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3">
                   {step === 2 && (
                     <button
                       type="button"
                       onClick={goToStep1}
                       disabled={status === 'sending'}
-                      className="btn-ghost w-full sm:w-auto"
+                      className="btn-ghost w-full"
                     >
                       Atrás
                     </button>
@@ -939,7 +832,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                     <button
                       type="button"
                       onClick={goToStep2}
-                      className="btn-primary w-full sm:w-auto"
+                      className="btn-primary w-full"
                     >
                       Continuar
                       <svg
@@ -958,7 +851,7 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
                       type="submit"
                       disabled={status === 'sending'}
                       aria-busy={status === 'sending'}
-                      className="btn-primary w-full sm:w-auto"
+                      className="btn-primary w-full"
                     >
                       {status === 'sending' ? (
                         <>
@@ -982,7 +875,6 @@ export default function ApplyForm({ onSubmit, takenHandles = [] }: ApplyFormProp
             </div>
           </form>
         </div>
-      </div>
     </section>
   )
 }

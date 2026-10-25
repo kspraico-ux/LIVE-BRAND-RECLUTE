@@ -3,47 +3,33 @@ import { describe, expect, it } from 'vitest'
 import HowItWorks from './HowItWorks'
 
 describe('HowItWorks', () => {
-  it('renderiza los 4 pasos del plan de reclutamiento en una lista ordenada', () => {
+  it('resume el proceso en tres pasos claros', () => {
     render(<HowItWorks />)
 
-    expect(screen.getByRole('heading', { level: 2, name: /cómo funciona/i })).toBeInTheDocument()
-    expect(screen.getByText(/plan de reclutamiento/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /qué pasa después/i })).toBeInTheDocument()
 
     const list = screen.getByRole('list')
     const items = within(list).getAllByRole('listitem')
-    expect(items).toHaveLength(4)
+    expect(items).toHaveLength(3)
 
-    expect(
-      screen.getByRole('heading', { level: 3, name: /postula gratis, sin cv/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { level: 3, name: /te contacta un pilar de la agencia/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { level: 3, name: /llamada de diagnóstico y primeras clases/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { level: 3, name: /primer live con equipo y plan medible/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: /envía tu perfil/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: /revisamos tu perfil/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: /empieza tu plan/i })).toBeInTheDocument()
   })
 
-  it('muestra tiempos explícitos de contacto (48 h / máximo 3 días)', () => {
+  it('muestra un plazo de respuesta consistente', () => {
     render(<HowItWorks />)
 
-    expect(screen.getByText(/días 1 a 3 · contacto de un pilar/i)).toBeInTheDocument()
-    expect(
-      screen.getByText(/te escribe en menos de 48 h \(máximo 3 días\)/i),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/semana 1 · diagnóstico \+ clases/i)).toBeInTheDocument()
+    expect(screen.getByText('Máximo 3 días')).toBeInTheDocument()
+    expect(screen.getByText(/te contactamos por email/i)).toBeInTheDocument()
   })
 
-  it('muestra la escasez honesta junto al CTA de la sección', () => {
+  it('ofrece un CTA directo al formulario', () => {
     render(<HowItWorks />)
 
-    expect(screen.getByRole('link', { name: /empezar mi postulación/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /postular gratis/i })).toHaveAttribute(
       'href',
       '#postular',
     )
-    expect(screen.getByText(/cupos limitados por categoría este mes/i)).toBeInTheDocument()
   })
 })

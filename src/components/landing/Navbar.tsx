@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LogoMark } from '../Logo'
 
-const links = [
-  { href: '#como-funciona', label: 'Plan' },
-  { href: '#postular', label: 'Postular' },
-]
-
-interface NavbarProps {
-  onOpenPanel: () => void
-}
-
-export default function Navbar({ onOpenPanel }: NavbarProps) {
+export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -22,14 +13,14 @@ export default function Navbar({ onOpenPanel }: NavbarProps) {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${
+      className={`fixed left-1/2 top-0 z-50 w-full max-w-[480px] -translate-x-1/2 transition duration-300 ${
         scrolled ? 'border-b border-white/10 bg-ink-950/80 backdrop-blur-xl' : 'bg-transparent'
       }`}
     >
       <a href="#main-content" className="skip-link">
         Saltar al contenido principal
       </a>
-      <nav aria-label="Principal" className="container-page flex h-20 items-center justify-between">
+      <nav aria-label="Principal" className="flex h-16 items-center justify-between px-5">
         <a href="#" aria-label="Live Brand, ir al inicio" className="group flex items-center gap-3">
           <span className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-ink-800/70 shadow-glow-sm transition group-hover:border-brand-400/50">
             <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand-500 to-glow opacity-0 blur-md transition group-hover:opacity-40" />
@@ -40,29 +31,9 @@ export default function Navbar({ onOpenPanel }: NavbarProps) {
           </span>
         </a>
 
-        <div className="hidden items-center gap-6 sm:flex">
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="font-display text-sm font-medium text-white/70 transition hover:text-white"
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onOpenPanel}
-            className="hidden font-display text-sm font-medium text-white/60 transition hover:text-brand-200 sm:block"
-          >
-            Panel interno
-          </button>
-          <a href="#postular" className="btn-primary !px-5 !py-2.5">
-            Quiero unirme
-          </a>
-        </div>
+        <a href="#postular" className="btn-primary !px-4 !py-2.5 text-xs">
+          Postular
+        </a>
       </nav>
     </header>
   )

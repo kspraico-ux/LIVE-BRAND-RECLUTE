@@ -8,7 +8,17 @@ export default function MobileCta({ onApply }: MobileCtaProps) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const onScroll = (): void => setVisible(window.scrollY > 520)
+    const onScroll = (): void => {
+      const applySection = document.getElementById('postular')
+      const footer = document.querySelector('footer')
+      const isOnScreen = (element: Element | null): boolean => {
+        if (!element) return false
+        const { top, bottom } = element.getBoundingClientRect()
+        return top < window.innerHeight && bottom > 0
+      }
+
+      setVisible(window.scrollY > 380 && !isOnScreen(applySection) && !isOnScreen(footer))
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -17,13 +27,13 @@ export default function MobileCta({ onApply }: MobileCtaProps) {
   if (!visible) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-ink-950/92 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl animate-fade-up sm:hidden">
+    <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-white/10 bg-ink-950/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl animate-fade-up">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-display text-xs font-semibold text-white">
-            Inscripción 100% gratuita
+            Postulación gratis
           </p>
-          <p className="truncate text-[11px] text-white/60">Respuesta en menos de 48 h</p>
+          <p className="truncate text-[11px] text-white/60">Respuesta en máximo 3 días</p>
         </div>
         <button type="button" onClick={onApply} className="btn-primary flex-none !px-5 !py-2.5">
           Postularme gratis

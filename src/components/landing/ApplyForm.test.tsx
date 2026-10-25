@@ -25,6 +25,7 @@ type User = ReturnType<typeof userEvent.setup>
 async function fillStep1(user: User, handle = 'anatest') {
   await user.type(screen.getByLabelText('@ de TikTok'), handle)
   await user.click(screen.getByRole('radio', { name: 'Gaming' }))
+  await user.click(screen.getByRole('button', { name: /añadir métricas/i }))
   await user.type(screen.getByLabelText(/seguidores/i), '1200')
   await user.type(screen.getByLabelText(/viewers promedio en live/i), '300')
   await user.click(screen.getByRole('checkbox', { name: /confirmo que fui aprobado/i }))
@@ -224,23 +225,22 @@ describe('ApplyForm', () => {
     render(<ApplyForm onSubmit={buildOnSubmit()} />)
 
     expect(
-      screen.getByText('Solo usamos tus datos para contactarte sobre la convocatoria.'),
+      screen.getByText('Usamos tus datos solo para contactarte sobre esta convocatoria.'),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/inscripción gratuita y sin compromiso/i),
+      screen.getByText(/gratis y sin compromiso/i),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('progressbar', { name: 'Progreso de la postulación' }),
     ).toBeInTheDocument()
   })
 
-  it('muestra los beneficios gratuitos de la inscripción', () => {
+  it('mantiene el formulario enfocado en la información necesaria', () => {
     render(<ApplyForm onSubmit={buildOnSubmit()} />)
 
-    expect(screen.getByText(/agencia oficial de TikTok LIVE en LATAM/i)).toBeInTheDocument()
-    expect(screen.getByText(/clases en vivo con profesionales de TikTok/i)).toBeInTheDocument()
-    expect(screen.getByText(/sin costo de inscripción/i)).toBeInTheDocument()
-    expect(screen.getByText(/plan de diamantes/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Cuéntanos de tus lives' })).toBeInTheDocument()
+    expect(screen.queryByText(/clases en vivo con profesionales de TikTok/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/plan de diamantes/i)).not.toBeInTheDocument()
   })
 
   it('ofrece las categorías como chips seleccionables', async () => {
@@ -260,6 +260,8 @@ describe('ApplyForm', () => {
     const user = userEvent.setup()
     render(<ApplyForm onSubmit={buildOnSubmit()} />)
 
+    expect(screen.queryByLabelText(/seguidores/i)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /añadir métricas/i }))
     await user.click(screen.getByRole('button', { name: '10k – 100k' }))
     expect(screen.getByLabelText(/seguidores/i)).toHaveValue(50000)
 
@@ -305,7 +307,7 @@ describe('ApplyForm', () => {
     await fillStep1(user)
     await goToStep2(user)
 
-    const toggle = screen.getByRole('button', { name: /opcional · mejora tu postulación/i })
+    const toggle = screen.getByRole('button', { name: /añadir datos opcionales/i })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByLabelText('Teléfono / WhatsApp')).not.toBeInTheDocument()
 
@@ -321,12 +323,11 @@ describe('ApplyForm', () => {
     expect(screen.queryByLabelText('Nombre completo')).toBeInTheDocument()
   })
 
-  it('muestra el requisito único de TikTok LATAM y la caja correspondiente', () => {
+  it('explica la condición de admisión junto al checkbox de confirmación', () => {
     render(<ApplyForm onSubmit={buildOnSubmit()} />)
 
-    expect(screen.getByText('Único requisito')).toBeInTheDocument()
     expect(
-      screen.getByText(/aprobado previamente como potencial emergente por tiktok live latam/i),
+      screen.getByText(/confirmo que fui aprobado previamente como potencial emergente por tiktok latam/i),
     ).toBeInTheDocument()
     expect(screen.queryByText(/1\.000 seguidores/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/5 horas semanales en vivo/i)).not.toBeInTheDocument()
@@ -383,7 +384,7 @@ describe('ApplyForm', () => {
     await fillStep1(user)
     await goToStep2(user)
 
-    const toggle = screen.getByRole('button', { name: /opcional · mejora tu postulación/i })
+    const toggle = screen.getByRole('button', { name: /añadir datos opcionales/i })
     await user.click(toggle)
     await user.type(screen.getByLabelText('Teléfono / WhatsApp'), '+56912345678')
     await user.click(toggle)

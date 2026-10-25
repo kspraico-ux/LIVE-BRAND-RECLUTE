@@ -14,9 +14,9 @@ describe('App', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { level: 1, name: /talento de lives/ }),
+      screen.getByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /panel interno/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /panel interno/i })).toBeInTheDocument()
   })
 
   it('renderiza el panel con hash #/panel', async () => {
@@ -27,7 +27,7 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Resumen de la convocatoria' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /talento de lives/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i })).not.toBeInTheDocument()
   })
 
   it('renderiza el 404 con un hash desconocido', () => {
@@ -36,18 +36,17 @@ describe('App', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /talento de lives/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i })).not.toBeInTheDocument()
   })
 
   it('incluye el plan de reclutamiento y el formulario en la landing', () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { level: 2, name: /cómo funciona/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /qué pasa después/i })).toBeInTheDocument()
     expect(screen.getByLabelText('@ de TikTok')).toBeInTheDocument()
-    expect(
-      screen.getAllByText(/te contactamos en menos de 48 h \(máximo 3 días\)/i).length,
-    ).toBeGreaterThan(0)
-    expect(screen.getByText('92% de aprobación en postulaciones')).toBeInTheDocument()
+    expect(screen.getAllByText(/respuesta en un máximo de 3 días/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: /empezar mi postulación/i })).toBeInTheDocument()
+    expect(screen.getByText(/TikTok LATAM te aprobó como talento emergente/i)).toBeInTheDocument()
   })
 
   it('no muestra las secciones retiradas del landing', () => {
@@ -85,7 +84,7 @@ describe('App', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { level: 1, name: /talento de lives/ }),
+      screen.getByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i }),
     ).toBeInTheDocument()
 
     await act(async () => {
@@ -96,6 +95,6 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Resumen de la convocatoria' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: /talento de lives/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: /haz crecer tus lives en tiktok/i })).not.toBeInTheDocument()
   })
 })

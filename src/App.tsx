@@ -113,8 +113,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar onOpenPanel={openPanel} />
+    <div className="mx-auto min-h-screen max-w-[480px] overflow-hidden border-x border-white/5">
+      <Navbar />
       <main id="main-content" tabIndex={-1}>
         <Hero onApply={goToApply} />
         <ApplyForm onSubmit={addApplicant} takenHandles={applicants.map((a) => a.handle)} />

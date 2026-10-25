@@ -27,7 +27,7 @@ describe('MobileCta', () => {
     })
 
     const cta = await screen.findByRole('button', { name: /postularme gratis/i })
-    expect(screen.getByText('Inscripción 100% gratuita')).toBeInTheDocument()
+    expect(screen.getByText('Postulación gratis')).toBeInTheDocument()
 
     await user.click(cta)
 
@@ -48,5 +48,39 @@ describe('MobileCta', () => {
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: /postularme gratis/i })).not.toBeInTheDocument(),
     )
+  })
+
+  it('deja libre el formulario y el pie cuando están en pantalla', () => {
+    const { container } = render(
+      <>
+        <section id="postular">
+          <MobileCta onApply={vi.fn()} />
+        </section>
+        <footer />
+      </>,
+    )
+    const section = container.querySelector('#postular')
+    const footer = container.querySelector('footer')
+    let formTop = 200
+    let footerTop = -900
+    vi.spyOn(section as HTMLElement, 'getBoundingClientRect').mockImplementation(
+      () => ({ top: formTop, bottom: formTop + 900 }) as DOMRect,
+    )
+    vi.spyOn(footer as HTMLElement, 'getBoundingClientRect').mockImplementation(
+      () => ({ top: footerTop, bottom: footerTop + 900 }) as DOMRect,
+    )
+
+    setScrollY(600)
+    act(() => window.dispatchEvent(new Event('scroll')))
+    expect(screen.queryByRole('button', { name: /postularme gratis/i })).not.toBeInTheDocument()
+
+    formTop = -900
+    footerTop = 200
+    act(() => window.dispatchEvent(new Event('scroll')))
+    expect(screen.queryByRole('button', { name: /postularme gratis/i })).not.toBeInTheDocument()
+
+    footerTop = -900
+    act(() => window.dispatchEvent(new Event('scroll')))
+    expect(screen.getByRole('button', { name: /postularme gratis/i })).toBeInTheDocument()
   })
 })

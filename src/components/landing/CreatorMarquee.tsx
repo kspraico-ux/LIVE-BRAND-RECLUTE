@@ -11,7 +11,7 @@ type Creator = {
 const creators: Creator[] = [
   {
     name: 'Charli D’Amelio',
-    image: '/creators/charli-damelio.jpg',
+    image: `${import.meta.env.BASE_URL}creators/charli-damelio.jpg`,
     title: "Charli D'Amelio 2.jpg",
     source: 'https://commons.wikimedia.org/wiki/File:Charli_D%27Amelio_2.jpg',
     photographer: 'Priyanka Pruthi',
@@ -20,7 +20,7 @@ const creators: Creator[] = [
   },
   {
     name: 'Khaby Lame',
-    image: '/creators/khaby-lame.jpg',
+    image: `${import.meta.env.BASE_URL}creators/khaby-lame.jpg`,
     title: 'KhabyLame.jpg',
     source: 'https://commons.wikimedia.org/wiki/File:KhabyLame.jpg',
     photographer: 'Gilzetbase',
@@ -29,7 +29,7 @@ const creators: Creator[] = [
   },
   {
     name: 'Addison Rae',
-    image: '/creators/addison-rae.jpg',
+    image: `${import.meta.env.BASE_URL}creators/addison-rae.jpg`,
     title: 'Addison Rae portrait.jpg',
     source: 'https://commons.wikimedia.org/wiki/File:Addison_Rae_portrait.jpg',
     photographer: 'Alisha Rose Barnes',
@@ -38,7 +38,7 @@ const creators: Creator[] = [
   },
   {
     name: 'Bella Poarch',
-    image: '/creators/bella-poarch.jpg',
+    image: `${import.meta.env.BASE_URL}creators/bella-poarch.jpg`,
     title: 'Bella Poarch - Pink Aura Tour.jpg',
     source: 'https://commons.wikimedia.org/wiki/File:Bella_Poarch_-_Pink_Aura_Tour.jpg',
     photographer: 'Angie Freems',
@@ -47,7 +47,7 @@ const creators: Creator[] = [
   },
   {
     name: 'Kimberly Loaiza',
-    image: '/creators/kimberly-loaiza.jpg',
+    image: `${import.meta.env.BASE_URL}creators/kimberly-loaiza.jpg`,
     title: 'Kimberly Loaiza.jpg',
     source: 'https://commons.wikimedia.org/wiki/File:Kimberly_Loaiza.jpg',
     photographer: 'Juan De Dios Pantoja OFICIAL',

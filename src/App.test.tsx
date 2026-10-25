@@ -62,7 +62,12 @@ describe('App', () => {
     render(<App />)
 
     const gallery = screen.getByRole('region', { name: /creadores populares de tiktok/i })
-    expect(gallery.querySelectorAll('img')).toHaveLength(10)
+    const images = Array.from(gallery.querySelectorAll('img'))
+    expect(images).toHaveLength(10)
+    expect(images[0]).toHaveAttribute(
+      'src',
+      `${import.meta.env.BASE_URL}creators/charli-damelio.jpg`,
+    )
     expect(screen.getByText(/no implican colaboración ni respaldo/i)).toBeInTheDocument()
 
     const credits = screen.getByText('Créditos de imágenes')

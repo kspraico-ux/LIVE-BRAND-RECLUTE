@@ -19,13 +19,14 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /panel interno/i })).toBeInTheDocument()
   })
 
-  it('mantiene el header acotado al ancho móvil sin CTA que expanda el lienzo', () => {
+  it('omite el header fijo y conserva el enlace de salto accesible', () => {
     render(<App />)
 
-    const header = screen.getByRole('banner')
-    expect(header).toHaveClass('inset-x-0', 'max-w-[1440px]', 'overflow-x-clip')
-    expect(header).not.toHaveClass('-translate-x-1/2')
-    expect(header.querySelector('a[href="#postular"]')).toHaveClass('!shadow-none')
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Saltar al contenido principal' })).toHaveAttribute(
+      'href',
+      '#main-content',
+    )
   })
 
   it('renderiza el panel con hash #/panel', async () => {

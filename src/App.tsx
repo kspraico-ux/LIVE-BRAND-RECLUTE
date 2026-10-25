@@ -1,6 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import type { Applicant, PanelTab } from './types'
-import Navbar from './components/landing/Navbar'
 import Hero from './components/landing/Hero'
 import HowItWorks from './components/landing/HowItWorks'
 import ApplyForm from './components/landing/ApplyForm'
@@ -114,7 +113,9 @@ export default function App() {
 
   return (
     <div className="mx-auto min-h-screen w-full min-w-0 max-w-[1440px] overflow-x-clip">
-      <Navbar />
+      <a href="#main-content" className="skip-link">
+        Saltar al contenido principal
+      </a>
       <main id="main-content" tabIndex={-1}>
         <Hero onApply={goToApply} />
         <ApplyForm onSubmit={addApplicant} takenHandles={applicants.map((a) => a.handle)} />

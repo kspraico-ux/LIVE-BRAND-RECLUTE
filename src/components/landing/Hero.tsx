@@ -7,7 +7,7 @@ interface HeroProps {
 
 export default function Hero({ onApply }: HeroProps) {
   return (
-    <section className="relative overflow-hidden pb-10 pt-24 sm:pt-28 lg:pt-32">
+    <section className="relative overflow-hidden pb-10 pt-10 sm:pt-14 lg:pt-16">
       <div className="pointer-events-none absolute inset-0">
         <HeroBackdrop />
       </div>
